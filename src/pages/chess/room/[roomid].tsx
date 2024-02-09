@@ -208,24 +208,31 @@ export default function PlayRandomMoveEngine() {
 
   function makeAMove(move) {
     if(!isPlayingVar) return null
+    let oldPgn = game.pgn()
 
     let tmp = game
     let tmp2
     try {
       tmp2 = tmp.move(move)
+      
+      let color = tmp2.color;
+      if(color===userColor){
+        setGame(tmp)
+        setFen(game.fen())
+  
+        socketRef.current.emit("move", {pgn:game.pgn(),roomid:roomid,move:tmp2,id:socketId,fen:game.fen()});
+  
+      }else{
+
+        // If the player can't play we set the board back to the old pgn to be sure dont get bad visual
+        game.loadPgn(oldPgn)
+
+      }
     } catch (error) {
       console.log(error)
       return null;
     }
 
-    let color = tmp2.color;
-    if(color===userColor){
-      setGame(tmp)
-      setFen(game.fen())
-
-      socketRef.current.emit("move", {pgn:game.pgn(),roomid:roomid,move:tmp2,id:socketId,fen:game.fen()});
-
-    }
 
     return; // null if the move was illegal, the move object if the move was legal
   }
@@ -256,6 +263,10 @@ export default function PlayRandomMoveEngine() {
     
     return (
       <div className={styles.main}>
+
+        <button onClick={()=>{
+          console.log(game.pgn())
+        }}>Test</button>
 
         <div>
           isPlayer : {isPlayingVar?"Oui":"Non"}

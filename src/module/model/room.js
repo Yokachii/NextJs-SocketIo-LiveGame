@@ -44,7 +44,7 @@ const Room = sequelize.define('rooms', {
 });
 
 (async () => {
-    await Room.sync({force:true});
+    await Room.sync({});
     console.log('La table "room" a été charger');
 })();
 
