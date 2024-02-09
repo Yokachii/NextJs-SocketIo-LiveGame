@@ -81,11 +81,14 @@ export default function PlayRandomMoveEngine() {
 
         socketRef.current.on('set-playing-as', (data)=>{
 
-          let {color,isOponentsFinded,isPlaying,players,chat,lastmove} = data
+          let {playerType,color,isOponentsFinded,isPlaying,players,chat,lastmove} = data
+          console.log('||||||||||||')
+          console.log(data)
+          console.log(playerType)
+          console.log('||||||||||||')
           
           lastmove = JSON.parse(lastmove)
           let lastboard = lastmove.before
-          let board = lastmove.after
 
           // Get the chat
           chat.unshift(messageArray[0])
@@ -122,7 +125,27 @@ export default function PlayRandomMoveEngine() {
             setIsPlayingVar(true)
           }
 
-          })
+          console.log('started as :'+playerType)
+
+          if(playerType=="last") socketRef.current.emit('accept-play',{roomId:roomid,userId:user?.id})
+          // if(playerType=="first") socketRef.current.emit('accept-play',{roomId:roomid,userId:user?.id})
+
+        })
+
+        socketRef.current.on('game-start', (data)=>{
+          let {oponentsName,oponentsElo} = data
+          console.log(data)
+          console.log('game start'+oponentsName+oponentsElo)
+          
+          setIsPlayingVar(true)
+          setOponents({name:oponentsName,elo:oponentsElo})
+        })
+
+        socketRef.current.on(`game-starting-as-p1`, (data)=>{
+          let { player2 } = data
+
+          setOponents({name:player2.firstname,elo:"1299?"})
+        })
     }
 
     const fetchRoom = async () => {
@@ -144,11 +167,15 @@ export default function PlayRandomMoveEngine() {
 
           if(data.room.status==="w"){
 
-            socketRef.current.emit(`join-game-try`,{roomid:roomid,userid:user?.id?user?.id:false})
+            setTimeout(() => {
+              socketRef.current.emit(`join-game-try`,{roomid:roomid,userid:user?.id?user?.id:false})
+            }, 300);
 
             // setIsPlayingVar(true)
 
           }else if(data.room.status==="p"){
+
+            // TODO WARNING SET THE PLAYER AS SPEC
 
             setIsPlayingVar(false)
 
@@ -314,7 +341,7 @@ export default function PlayRandomMoveEngine() {
 
         <div className={styles.players_container}>
 
-          <span>{playerInfo.name}</span>
+          <span>{user?.name}</span>
           <span>{playerInfo.elo}</span>
 
         </div>

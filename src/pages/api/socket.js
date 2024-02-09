@@ -125,6 +125,8 @@ const SocketHandler = async (req, res) => {
 [Variant "From Position"]
 [FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1"]`
         })
+
+        socket.join(`${roomId}/P1`)
       })
 
 
@@ -158,24 +160,60 @@ const SocketHandler = async (req, res) => {
         let players = JSON.parse(room.dataValues.player)
         let player1 = players.player1
         let player1user = await Users.findOne({where:{id:player1.id}})
-        if(user&&userid){
+        // console.log('|||||||||||||||||||||||')
+        // console.log(user,userid)
+        // console.log('|||||||||||||||||||||||')
+        if(user.dataValues.id){
 
           // TODO : attendre que le player2 envoie une réponse puis start le 1v1
-
+          console.log(player1.id)
+          console.log(user.dataValues.id)
           if(player1.id===user.dataValues.id){
-
-            socket.emit('set-playing-as',{lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color,isPlaying:true,isOponentsFinded:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
+            console.log('myself')
+            socket.join(`${roomid}/P1`)
+            socket.emit('set-playing-as',{playerType:"first",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color,isPlaying:true,isOponentsFinded:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
             
           }else{
+            console.log('p2')
             
-            socket.emit('set-playing-as',{lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color==="w"?"b":"w",isPlaying:true,isOponentsFinded:true,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{name:user.dataValues.firstname,id:user.dataValues.id}}})
+            socket.emit('set-playing-as',{playerType:"last",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color==="w"?"b":"w",isPlaying:true,isOponentsFinded:true,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{name:user.dataValues.firstname,id:user.dataValues.id}}})
 
           }
 
         }else{
-          socket.emit('set-playing-as',{lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:"w",isPlaying:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
+          socket.emit('set-playing-as',{playerType:"",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:"w",isPlaying:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
         }
         // socket.to(roomid).emit
+      })
+
+      socket.on('accept-play', async (data) => {
+
+        console.log('&&&&&&&&&&& accepting play p2')
+        console.log(data)
+
+        if(data.playerType="last"){
+
+          socket.join(`${data.roomId}/P2`)
+          let room = await Rooms.findOne({where:{id:data.roomId}})
+          let user2 = await Users.findOne({where:{id:data.userId}})
+          let player = JSON.parse(room.dataValues.player)
+          let user1 = await Users.findOne({where:{id:player.player1.id}})
+          player.player2 = {color:player.player1.color=="w"?"b":"w",id:data.userId}
+          room.player=JSON.stringify(player)
+          room.status="p"
+          room.save()
+          console.log(`the room : ${room.dataValues.id} got saved as playing`)
+          io.to(`${data.roomId}/P1`).emit(`game-starting-as-p1`,{player2:user2.dataValues})
+          socket.emit(`game-start`,{oponentsName:user1.dataValues.firstname,oponentsElo:`1199?`})
+
+        }else if(data.playerType="first"){
+
+        }else{
+
+        }
+
+        
+
       })
 
       socket.on('disconnect', async ()=>{
