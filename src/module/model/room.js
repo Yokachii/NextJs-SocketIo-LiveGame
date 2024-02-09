@@ -32,6 +32,10 @@ const Room = sequelize.define('rooms', {
         type: DataTypes.TEXT,
         allowNull: false
     },
+    chat:{
+        type: DataTypes.TEXT,
+        allowNull: false
+    }
     // board:{
     //     type: DataTypes.TEXT,
     //     allowNull: false

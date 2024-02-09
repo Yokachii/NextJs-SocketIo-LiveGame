@@ -97,8 +97,10 @@ const SocketHandler = async (req, res) => {
     res.socket.server.io = io
 
     io.on('connection', async (socket) => {
+      let roomIdLet
       socket.emit('get-room')
       socket.on('set-room', roomid => {
+        roomIdLet=roomid
         console.log(roomid)
         socket.join(roomid)
         socket.emit('room-joined',{message:"Room joined succesfully",id:socket.id})
@@ -112,7 +114,8 @@ const SocketHandler = async (req, res) => {
           player:JSON.stringify({player1:{color:"w",id:userId}}),
           status:`w`,
           lastboard:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-          lastmove:""
+          lastmove:"",
+          chat:JSON.stringify([]),
         })
       })
       socket.on('move', async (data) => {
@@ -123,8 +126,37 @@ const SocketHandler = async (req, res) => {
         room.save();
         socket.to(data.roomid).emit('move-played',data)
       })
-      socket.on('disconnect',()=>{
-         console.log(`client ${socket.id} disconnected.....`)
+      socket.on('send-message', async (data) => {
+        const room = await Rooms.findOne({where:{id:data.roomid}})
+        let tmp = room.dataValues.chat
+        tmp.push({message:data.message,sendedBy:data.sendedBy})
+        room.chat = tmp
+        socket.to(data.roomid).emit('new-message',data)
+      })
+      socket.on('disconnect', async ()=>{
+          if(roomIdLet){
+            let usersInRoom = await io.in(roomIdLet).fetchSockets();
+            if(usersInRoom.length==0){
+              setTimeout(async() => {
+                
+
+                let usersInRoom2 = await io.in(roomIdLet).fetchSockets();
+                if(usersInRoom2.length==0){
+                  const room = await Rooms.findOne({where:{id:roomIdLet}})
+                  if(room&&room.dataValues){
+
+                    // TODO : arrèter la partie si elle est en cour est donner des résultat
+
+                    room.destroy();
+                  }
+                }
+
+
+
+              }, 30000);
+            }
+          }
+          console.log(`client ${socket.id} disconnected..... ?${roomIdLet}`)
       })
       // socket.on('join-room', data => {
       //   console.log(data)

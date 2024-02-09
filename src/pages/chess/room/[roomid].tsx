@@ -5,6 +5,9 @@ import { Chessboard } from "react-chessboard";
 import { useRouter } from "next/router";
 import io from 'Socket.IO-client'
 import Link from "next/link";
+import styles from './styles.module.scss'
+import { useSession } from "next-auth/react";
+import { Button } from "@mantine/core";
 let socket:any;
 
 type aMove = {
@@ -28,8 +31,14 @@ export default function PlayRandomMoveEngine() {
     const [isRoomExist,setIsRoomExist] = useState(true)
     const [isWhite,setIsWhite] = useState(true)
     const [isPlaying,setIsPlaying] = useState(false)
+    const [messageArray,setMessageArray] = useState([{message:"You joined the chat",sendedBy:""}])
+    const [input,setInput] = useState('')
     
     let mySocket = socketRef.current
+
+    let session = useSession()
+    let data = session.data
+    let user = data?.user
 
   
     const socketInitializer = async () => {
@@ -44,10 +53,22 @@ export default function PlayRandomMoveEngine() {
             console.log(data)
         })
         socketRef.current.on('move-played',(data)=>{
+          console.log('moveedddd')
             let id = data.id
             console.log(data)
             if(id===socketId) return
-            makeAMove(data.move)
+            moveOnBoardWithoutRequest(data.move)
+            // makeAMove(data.move)
+        })
+        socketRef.current.on('new-message',(data)=>{
+          if(data.id===socketId) return
+          let message = data.message
+          let sendedBy = data.name
+          //@ts-ignore
+          setMessageArray(prevSearchItemArray => {
+            const newSearchItemArray = [...prevSearchItemArray, {message,sendedBy}];
+            return newSearchItemArray;
+          });
         })
     }
 
@@ -119,6 +140,18 @@ export default function PlayRandomMoveEngine() {
         socketInitializer()
     },[router.isReady])
 
+    function moveOnBoardWithoutRequest(move){
+
+      let tmp = game
+      try {
+        tmp.move(move)
+      } catch (error) {
+        return null;
+      }
+      setGame(tmp)
+      setFen(game.fen())
+    
+    }
 
   function makeAMove(move) {
     if(!isPlaying) return null
@@ -159,8 +192,38 @@ export default function PlayRandomMoveEngine() {
   if(isRoomExist){
     
     return (
-      <div style={{width:"60vw"}}>
-          <Chessboard position={fen} onPieceDrop={onDrop} boardOrientation={isWhite?"white":"black"}/>;
+      <div className={styles.main}>
+        <div style={{width:"60vw"}}>
+            <Chessboard position={fen} onPieceDrop={onDrop} boardOrientation={isWhite?"white":"black"}/>
+        </div>
+
+        <div className={styles.chat}>
+          <div className={styles.message}>
+
+            {
+              messageArray.map((item,i)=>(
+                <span>
+                  <span>{item.sendedBy}</span> <span>{item.message}</span>
+                </span>
+              ))
+            }
+
+          </div>
+          <div className={styles.send}>
+
+          <input onChange={(e)=>{setInput(e.target.value)}}></input>
+
+          <Button onClick={()=>{
+              socketRef.current.emit('send-message',{message:input,name:user?user?.name:`Guest`,roomid:roomid,id:socketId})
+              setMessageArray(prevSearchItemArray => {
+                const newSearchItemArray = [...prevSearchItemArray, {message:input,sendedBy:`You`}];
+                return newSearchItemArray;
+              });
+          }}>Send a message</Button>
+
+          </div>
+        </div>
+
       </div>
     )
 
