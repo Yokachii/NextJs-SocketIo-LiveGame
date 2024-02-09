@@ -29,9 +29,8 @@ export default function PlayRandomMoveEngine() {
     const [socketId,setSocketId] = useState('')
     const socketRef = useRef(null)
     const [isRoomExist,setIsRoomExist] = useState(true)
-    const [isWhite,setIsWhite] = useState(true)
     const [userColor,setUserColor] = useState('w')
-    const [isPlaying,setIsPlaying] = useState(false)
+    const [isPlayingVar,setIsPlayingVar] = useState(false)
     const [messageArray,setMessageArray] = useState([{message:"You joined the chat",name:""}])
     const [input,setInput] = useState('')
     const [displayBoard,setDisplayBoard] = useState(false)
@@ -47,20 +46,18 @@ export default function PlayRandomMoveEngine() {
         await fetch('/api/socket');
         socketRef.current = io();
         socketRef.current.on('get-room', () => {
-            console.log('recived')
             socketRef.current.emit('set-room',roomid)
         })
         socketRef.current.on('room-joined',(data)=>{
             setSocketId(data.id)
-            console.log(data)
         })
         socketRef.current.on('move-played',(data)=>{
-          console.log('moveedddd')
-            let id = data.id
-            console.log(data)
-            if(id===socketId) return
-            moveOnBoardWithoutRequest(data.move)
-            // makeAMove(data.move)
+          console.log('a move receved')
+          console.log(data,socketId)
+          let id = data.id
+          if(id===socketId) return
+          setFen(data.move.after)
+          // moveOnBoardWithoutRequest(data.move)
         })
         socketRef.current.on('new-message',(data)=>{
           if(data.id===socketId) return
@@ -76,12 +73,10 @@ export default function PlayRandomMoveEngine() {
         socketRef.current.on('set-playing-as', (data)=>{
 
           let {color,isOponentsFinded,isPlaying,players,chat,lastmove} = data
+          
           lastmove = JSON.parse(lastmove)
           let lastboard = lastmove.before
           let board = lastmove.after
-          console.log(lastmove)
-
-          console.log(data)
 
           // Get the chat
           chat.unshift(messageArray[0])
@@ -92,13 +87,11 @@ export default function PlayRandomMoveEngine() {
 
           // Set the fen on the board
           let lastfen:string = lastboard?lastboard:`rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`
-          console.log(lastmove)
           setTimeout(() => {
             setFen(lastfen)
             if(lastmove&&lastmove.from){
 
               let tmp = game
-              console.log(lastfen)
               tmp.load(lastfen)
               try {
                 tmp.move(lastmove)
@@ -115,7 +108,10 @@ export default function PlayRandomMoveEngine() {
           
           // Display the board
           setDisplayBoard(true)
-          setIsPlaying(true)
+          
+          if(isPlaying){
+            setIsPlayingVar(true)
+          }
 
           })
     }
@@ -139,14 +135,13 @@ export default function PlayRandomMoveEngine() {
 
           if(data.room.status==="w"){
 
-            console.log({roomid:roomid,userid:user?.id?user?.id:false})
             socketRef.current.emit(`join-game-try`,{roomid:roomid,userid:user?.id?user?.id:false})
 
-            setIsPlaying(true)
+            // setIsPlayingVar(true)
 
           }else if(data.room.status==="p"){
 
-            setIsPlaying(false)
+            setIsPlayingVar(false)
 
           }
           
@@ -178,15 +173,17 @@ export default function PlayRandomMoveEngine() {
       try {
         tmp.move(move)
       } catch (error) {
+        console.log(error)
         return null;
       }
+      // console.log('')
       setGame(tmp)
       setFen(game.fen())
     
     }
 
   function makeAMove(move) {
-    if(!isPlaying) return null
+    if(!isPlayingVar) return null
     let tmp = game
     let tmp2
     try {
@@ -194,10 +191,11 @@ export default function PlayRandomMoveEngine() {
     } catch (error) {
       return null;
     }
-    console.log(tmp2)
+    if(tmp2.color!==userColor) return null;
     setGame(tmp)
     setFen(game.fen())
     socketRef.current.emit("move", {roomid:roomid,move:tmp2,id:socketId,fen:game.fen()});
+    console.log('a move sended'+{roomid:roomid,move:tmp2,id:socketId,fen:game.fen()})
     // setGame(game)
     return tmp; // null if the move was illegal, the move object if the move was legal
   }

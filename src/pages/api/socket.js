@@ -106,7 +106,6 @@ const SocketHandler = async (req, res) => {
 
       socket.on('set-room', roomid => {
         roomIdLet=roomid
-        console.log(roomid)
         socket.join(roomid)
         socket.emit('room-joined',{message:"Room joined succesfully",id:socket.id})
       })
@@ -127,6 +126,7 @@ const SocketHandler = async (req, res) => {
 
 
       socket.on('move', async (data) => {
+        console.log(`New move played :`+data)
         let room = await Rooms.findOne({where:{id:data.roomid}})
         room.lastmove = JSON.stringify(data.move)
         room.board = data.fen
@@ -151,13 +151,13 @@ const SocketHandler = async (req, res) => {
         let { roomid,userid } = data
         let room = await Rooms.findOne({where:{id:roomid}})
         let user = await Users.findOne({where:{id:userid}})
-        if(room&&user){
+        let players = JSON.parse(room.dataValues.player)
+        let player1 = players.player1
+        let player1user = await Users.findOne({where:{id:player1.id}})
+        if(user&&userid){
 
           // TODO : attendre que le player2 envoie une réponse puis start le 1v1
 
-          let players = JSON.parse(room.dataValues.player)
-          let player1 = players.player1
-          let player1user = await Users.findOne({where:{id:player1.id}})
           if(player1.id===user.dataValues.id){
 
             socket.emit('set-playing-as',{lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color,isPlaying:true,isOponentsFinded:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
