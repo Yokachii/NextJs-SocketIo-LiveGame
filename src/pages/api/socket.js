@@ -87,6 +87,7 @@
 import { Server } from 'Socket.IO'
 import Rooms from '@/module/model/room'
 import { where } from 'sequelize'
+import Users from '@/module/model/user'
 
 const SocketHandler = async (req, res) => {
   if (res.socket.server.io) {
@@ -98,13 +99,19 @@ const SocketHandler = async (req, res) => {
 
     io.on('connection', async (socket) => {
       let roomIdLet
+
+
       socket.emit('get-room')
+
+
       socket.on('set-room', roomid => {
         roomIdLet=roomid
         console.log(roomid)
         socket.join(roomid)
         socket.emit('room-joined',{message:"Room joined succesfully",id:socket.id})
       })
+
+
       socket.on('create-room', data=>{
         const {roomId, userId} = data
 
@@ -118,6 +125,8 @@ const SocketHandler = async (req, res) => {
           chat:JSON.stringify([]),
         })
       })
+
+
       socket.on('move', async (data) => {
         let room = await Rooms.findOne({where:{id:data.roomid}})
         room.lastboard = room.board
@@ -126,50 +135,96 @@ const SocketHandler = async (req, res) => {
         room.save();
         socket.to(data.roomid).emit('move-played',data)
       })
+
+
+
       socket.on('send-message', async (data) => {
         const room = await Rooms.findOne({where:{id:data.roomid}})
         let tmp = room.dataValues.chat
         tmp.push({message:data.message,sendedBy:data.sendedBy})
         room.chat = tmp
+        room.save()
         socket.to(data.roomid).emit('new-message',data)
       })
-      socket.on('disconnect', async ()=>{
-          if(roomIdLet){
-            let usersInRoom = await io.in(roomIdLet).fetchSockets();
-            if(usersInRoom.length==0){
-              setTimeout(async() => {
-                
-
-                let usersInRoom2 = await io.in(roomIdLet).fetchSockets();
-                if(usersInRoom2.length==0){
-                  const room = await Rooms.findOne({where:{id:roomIdLet}})
-                  if(room&&room.dataValues){
-
-                    // TODO : arrèter la partie si elle est en cour est donner des résultat
-
-                    room.destroy();
-                  }
-                }
 
 
 
-              }, 30000);
-            }
+      socket.on('join-game-try', async (data) => {
+        let { roomid,userid,name } = data
+        let room = await Rooms.findOne({where:{id:roomid}})
+        let user = await Users.findOne({where:{id:userid}})
+        if(room&&user){
+
+          // TODO : attendre que le player2 envoie une réponse puis start le 1v1
+
+          let players = room.dataValues.player
+          let player1 = players.player1
+          let player1user = await Users.findOne({where:{id:player1.id}})
+          if(player1.id===user.dataValues.id){
+
+            socket.emit('set-playing-as',{color:player1.color,isPlaying:true,isOponentsFinded:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
+            
+          }else{
+            
+            socket.emit('set-playing-as',{color:player1.color==="w"?"b":"w",isPlaying:true,isOponentsFinded:true,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{name:user.dataValues.firstname,id:user.dataValues.id}}})
+
           }
-          console.log(`client ${socket.id} disconnected..... ?${roomIdLet}`)
+
+        }else{
+          socket.emit('set-playing-as',{color:"w",isPlaying:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
+        }
+        // socket.to(roomid).emit
       })
-      // socket.on('join-room', data => {
-      //   console.log(data)
-      //   let id = data
-      //   console.log(`Test : ${id}`)
-      //   socket.broadcast.emit('update-input', id)
-      // })
+
+      socket.on('disconnect', async ()=>{
+        if(roomIdLet){
+          let usersInRoom = await io.in(roomIdLet).fetchSockets();
+          if(usersInRoom.length==0){
+            setTimeout(async() => {
+              
+
+              let usersInRoom2 = await io.in(roomIdLet).fetchSockets();
+              if(usersInRoom2.length==0){
+                const room = await Rooms.findOne({where:{id:roomIdLet}})
+                if(room&&room.dataValues){
+
+                  // TODO : arrèter la partie si elle est en cour est donner des résultat
+
+                  room.destroy();
+                }
+              }
+
+
+
+            }, 30000);
+          }
+        }
+        console.log(`client ${socket.id} disconnected..... ?${roomIdLet}`)
+      })
+
+
+
     })
   }
   res.end()
 }
 
 export default SocketHandler
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
