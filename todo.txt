@@ -1,6 +1,3 @@
-Chess :
-    - Affichage :
-    - Problème :
-    - étude :
-    - jeux :
-        - Socket :
+Set le player2 quand il arrive
+Empécher les joueur en spec/sans compte de bouger les pièce
+et bloquer les pièce de la couleur adverse

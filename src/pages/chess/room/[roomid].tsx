@@ -30,9 +30,11 @@ export default function PlayRandomMoveEngine() {
     const socketRef = useRef(null)
     const [isRoomExist,setIsRoomExist] = useState(true)
     const [isWhite,setIsWhite] = useState(true)
+    const [userColor,setUserColor] = useState('w')
     const [isPlaying,setIsPlaying] = useState(false)
-    const [messageArray,setMessageArray] = useState([{message:"You joined the chat",sendedBy:""}])
+    const [messageArray,setMessageArray] = useState([{message:"You joined the chat",name:""}])
     const [input,setInput] = useState('')
+    const [displayBoard,setDisplayBoard] = useState(false)
     
     let mySocket = socketRef.current
 
@@ -63,13 +65,59 @@ export default function PlayRandomMoveEngine() {
         socketRef.current.on('new-message',(data)=>{
           if(data.id===socketId) return
           let message = data.message
-          let sendedBy = data.name
+          let name = data.name
           //@ts-ignore
           setMessageArray(prevSearchItemArray => {
-            const newSearchItemArray = [...prevSearchItemArray, {message,sendedBy}];
+            const newSearchItemArray = [...prevSearchItemArray, {message,name}];
             return newSearchItemArray;
           });
         })
+
+        socketRef.current.on('set-playing-as', (data)=>{
+
+          let {color,isOponentsFinded,isPlaying,players,chat,lastmove} = data
+          lastmove = JSON.parse(lastmove)
+          let lastboard = lastmove.before
+          let board = lastmove.after
+          console.log(lastmove)
+
+          console.log(data)
+
+          // Get the chat
+          chat.unshift(messageArray[0])
+          setMessageArray(chat)
+          
+          // Set the board at the good side
+          setUserColor(color)
+
+          // Set the fen on the board
+          let lastfen:string = lastboard?lastboard:`rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`
+          console.log(lastmove)
+          setTimeout(() => {
+            setFen(lastfen)
+            if(lastmove&&lastmove.from){
+
+              let tmp = game
+              console.log(lastfen)
+              tmp.load(lastfen)
+              try {
+                tmp.move(lastmove)
+              } catch (error) {
+                return null;
+              }
+              setGame(tmp)
+              setFen(game.fen())
+            }else{
+
+            }
+
+          }, 300);
+          
+          // Display the board
+          setDisplayBoard(true)
+          setIsPlaying(true)
+
+          })
     }
 
     const fetchRoom = async () => {
@@ -85,43 +133,27 @@ export default function PlayRandomMoveEngine() {
 
       if(data.success){
 
-        let players = JSON.parse(data.room.player)
-
-        if(data.room.status==="w"){
-
-          setIsPlaying(true)
-
-        }else if(data.room.status==="p"){
-
-          setIsPlaying(false)
-
-        }
-
-        
-        let lastfen:string = data.room.lastboard?data.room.lastboard:`start`
-        let move = data.room.lastmove?JSON.parse(data.room.lastmove):false
-        console.log(move)
         setTimeout(() => {
-          setFen(lastfen)
-          if(move&&move.from){
 
-            console.log('aaa')
+          let players = JSON.parse(data.room.player)
 
-            let tmp = game
-            tmp.load(lastfen)
-            try {
-              tmp.move(move)
-            } catch (error) {
-              return null;
-            }
-            setGame(tmp)
-            setFen(game.fen())
-          }else{
+          if(data.room.status==="w"){
+
+            console.log({roomid:roomid,userid:user?.id?user?.id:false})
+            socketRef.current.emit(`join-game-try`,{roomid:roomid,userid:user?.id?user?.id:false})
+
+            setIsPlaying(true)
+
+          }else if(data.room.status==="p"){
+
+            setIsPlaying(false)
 
           }
+          
+        }, 400);
 
-        }, 300);
-        console.log(players)
+        
+        
 
       }else{
 
@@ -156,14 +188,16 @@ export default function PlayRandomMoveEngine() {
   function makeAMove(move) {
     if(!isPlaying) return null
     let tmp = game
+    let tmp2
     try {
-      tmp.move(move)
+      tmp2 = tmp.move(move)
     } catch (error) {
       return null;
     }
+    console.log(tmp2)
     setGame(tmp)
     setFen(game.fen())
-    socketRef.current.emit("move", {roomid:roomid,move:move,id:socketId,fen:game.fen()});
+    socketRef.current.emit("move", {roomid:roomid,move:tmp2,id:socketId,fen:game.fen()});
     // setGame(game)
     return tmp; // null if the move was illegal, the move object if the move was legal
   }
@@ -194,7 +228,7 @@ export default function PlayRandomMoveEngine() {
     return (
       <div className={styles.main}>
         <div style={{width:"60vw"}}>
-            <Chessboard position={fen} onPieceDrop={onDrop} boardOrientation={isWhite?"white":"black"}/>
+            <Chessboard position={fen} onPieceDrop={onDrop} boardOrientation={userColor==="w"?"white":"black"}/>
         </div>
 
         <div className={styles.chat}>
@@ -203,7 +237,7 @@ export default function PlayRandomMoveEngine() {
             {
               messageArray.map((item,i)=>(
                 <span>
-                  <span>{item.sendedBy}</span> <span>{item.message}</span>
+                  <span>{item.name}</span> <span>{item.message}</span>
                 </span>
               ))
             }
@@ -216,7 +250,7 @@ export default function PlayRandomMoveEngine() {
           <Button onClick={()=>{
               socketRef.current.emit('send-message',{message:input,name:user?user?.name:`Guest`,roomid:roomid,id:socketId})
               setMessageArray(prevSearchItemArray => {
-                const newSearchItemArray = [...prevSearchItemArray, {message:input,sendedBy:`You`}];
+                const newSearchItemArray = [...prevSearchItemArray, {message:input,name:`You`}];
                 return newSearchItemArray;
               });
           }}>Send a message</Button>

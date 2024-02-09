@@ -24,10 +24,6 @@ const Room = sequelize.define('rooms', {
         type: DataTypes.TEXT,
         allowNull: false
     },
-    lastboard:{
-        type: DataTypes.TEXT,
-        allowNull: false
-    },
     lastmove:{
         type: DataTypes.TEXT,
         allowNull: false

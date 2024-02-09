@@ -120,8 +120,7 @@ const SocketHandler = async (req, res) => {
           board:`rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`,
           player:JSON.stringify({player1:{color:"w",id:userId}}),
           status:`w`,
-          lastboard:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-          lastmove:"",
+          lastmove:JSON.stringify({after:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",before:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"}),
           chat:JSON.stringify([]),
         })
       })
@@ -129,7 +128,6 @@ const SocketHandler = async (req, res) => {
 
       socket.on('move', async (data) => {
         let room = await Rooms.findOne({where:{id:data.roomid}})
-        room.lastboard = room.board
         room.lastmove = JSON.stringify(data.move)
         room.board = data.fen
         room.save();
@@ -140,9 +138,9 @@ const SocketHandler = async (req, res) => {
 
       socket.on('send-message', async (data) => {
         const room = await Rooms.findOne({where:{id:data.roomid}})
-        let tmp = room.dataValues.chat
-        tmp.push({message:data.message,sendedBy:data.sendedBy})
-        room.chat = tmp
+        let tmp = JSON.parse(room.dataValues.chat)
+        tmp.push({message:data.message,name:data.name,id:data.id})
+        room.chat = JSON.stringify(tmp)
         room.save()
         socket.to(data.roomid).emit('new-message',data)
       })
@@ -150,28 +148,28 @@ const SocketHandler = async (req, res) => {
 
 
       socket.on('join-game-try', async (data) => {
-        let { roomid,userid,name } = data
+        let { roomid,userid } = data
         let room = await Rooms.findOne({where:{id:roomid}})
         let user = await Users.findOne({where:{id:userid}})
         if(room&&user){
 
           // TODO : attendre que le player2 envoie une réponse puis start le 1v1
 
-          let players = room.dataValues.player
+          let players = JSON.parse(room.dataValues.player)
           let player1 = players.player1
           let player1user = await Users.findOne({where:{id:player1.id}})
           if(player1.id===user.dataValues.id){
 
-            socket.emit('set-playing-as',{color:player1.color,isPlaying:true,isOponentsFinded:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
+            socket.emit('set-playing-as',{lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color,isPlaying:true,isOponentsFinded:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
             
           }else{
             
-            socket.emit('set-playing-as',{color:player1.color==="w"?"b":"w",isPlaying:true,isOponentsFinded:true,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{name:user.dataValues.firstname,id:user.dataValues.id}}})
+            socket.emit('set-playing-as',{lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color==="w"?"b":"w",isPlaying:true,isOponentsFinded:true,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{name:user.dataValues.firstname,id:user.dataValues.id}}})
 
           }
 
         }else{
-          socket.emit('set-playing-as',{color:"w",isPlaying:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
+          socket.emit('set-playing-as',{lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:"w",isPlaying:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
         }
         // socket.to(roomid).emit
       })
