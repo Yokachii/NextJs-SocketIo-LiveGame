@@ -85,8 +85,10 @@
 // export default SocketHandler
 
 import { Server } from 'Socket.IO'
+import Rooms from '@/module/model/room'
+import { where } from 'sequelize'
 
-const SocketHandler = (req, res) => {
+const SocketHandler = async (req, res) => {
   if (res.socket.server.io) {
     console.log('Socket is already running')
   } else {
@@ -94,11 +96,42 @@ const SocketHandler = (req, res) => {
     const io = new Server(res.socket.server)
     res.socket.server.io = io
 
-    io.on('connection', socket => {
-      socket.on('input-change', msg => {
-        console.log(`Test : ${msg.data}`)
-        socket.broadcast.emit('update-input', msg)
+    io.on('connection', async (socket) => {
+      socket.emit('get-room')
+      socket.on('set-room', roomid => {
+        console.log(roomid)
+        socket.join(roomid)
+        socket.emit('room-joined',{message:"Room joined succesfully",id:socket.id})
       })
+      socket.on('create-room', data=>{
+        const {roomId, userId} = data
+
+        Rooms.create({
+          id:roomId,
+          board:`rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`,
+          player:JSON.stringify({player1:{color:"w",id:userId}}),
+          status:`w`,
+          lastboard:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+          lastmove:""
+        })
+      })
+      socket.on('move', async (data) => {
+        let room = await Rooms.findOne({where:{id:data.roomid}})
+        room.lastboard = room.board
+        room.lastmove = JSON.stringify(data.move)
+        room.board = data.fen
+        room.save();
+        socket.to(data.roomid).emit('move-played',data)
+      })
+      socket.on('disconnect',()=>{
+         console.log(`client ${socket.id} disconnected.....`)
+      })
+      // socket.on('join-room', data => {
+      //   console.log(data)
+      //   let id = data
+      //   console.log(`Test : ${id}`)
+      //   socket.broadcast.emit('update-input', id)
+      // })
     })
   }
   res.end()
