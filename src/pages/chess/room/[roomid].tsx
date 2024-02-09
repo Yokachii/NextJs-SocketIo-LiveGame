@@ -24,6 +24,10 @@ export default function PlayRandomMoveEngine() {
     const router = useRouter()
     const { roomid } = router.query
 
+    let session = useSession()
+    let data = session.data
+    let user = data?.user
+    
     const [game, setGame] = useState(new Chess());
     const [fen,setFen] = useState(game.fen())
     const [socketId,setSocketId] = useState('')
@@ -34,12 +38,12 @@ export default function PlayRandomMoveEngine() {
     const [messageArray,setMessageArray] = useState([{message:"You joined the chat",name:""}])
     const [input,setInput] = useState('')
     const [displayBoard,setDisplayBoard] = useState(false)
+
+    const [oponents,setOponents] = useState({name:"?",elo:"1200?"})
+    const [playerInfo,setPlayerInfo] = useState({name:user?.name,elo:"1200?"})
     
     let mySocket = socketRef.current
 
-    let session = useSession()
-    let data = session.data
-    let user = data?.user
 
   
     const socketInitializer = async () => {
@@ -48,15 +52,20 @@ export default function PlayRandomMoveEngine() {
         socketRef.current.on('get-room', () => {
             socketRef.current.emit('set-room',roomid)
         })
-        socketRef.current.on('room-joined',(data)=>{
+        socketRef.current.on('room-joined',(data:{id:string})=>{
             setSocketId(data.id)
         })
-        socketRef.current.on('move-played',(data)=>{
-          console.log('a move receved')
-          console.log(data,socketId)
+        socketRef.current.on('move-played', async (data:{pgn:string;id:string;move:Record<string,string>})=>{
           let id = data.id
-          if(id===socketId) return
-          setFen(data.move.after)
+          console.log(data)
+          console.log(socketId)
+          if(id==socketId) return
+          console.log('i recive a move')
+          console.log(data.move.san)
+          loadPgn(data.pgn)
+          // moveOnBoardWithoutRequest(data.move.san)
+          // setFen(data.move.before)
+          // makeAMove(data.move.san)
           // moveOnBoardWithoutRequest(data.move)
         })
         socketRef.current.on('new-message',(data)=>{
@@ -167,37 +176,58 @@ export default function PlayRandomMoveEngine() {
         socketInitializer()
     },[router.isReady])
 
-    function moveOnBoardWithoutRequest(move){
+    function loadPgn(pgn:string){
 
       let tmp = game
       try {
-        tmp.move(move)
+        tmp.loadPgn(pgn)
       } catch (error) {
         console.log(error)
         return null;
       }
-      // console.log('')
       setGame(tmp)
       setFen(game.fen())
+      return;
+    }
+
+    function moveOnBoardWithoutRequest(move){
+
+      let tmp = game
+      let tmp2
+      try {
+        tmp2 = tmp.move(move)
+      } catch (error) {
+        console.log(error)
+        return null;
+      }
+      setGame(tmp)
+      setFen(game.fen())
+      return tmp2
     
     }
 
   function makeAMove(move) {
     if(!isPlayingVar) return null
+
     let tmp = game
     let tmp2
     try {
       tmp2 = tmp.move(move)
     } catch (error) {
+      console.log(error)
       return null;
     }
-    if(tmp2.color!==userColor) return null;
-    setGame(tmp)
-    setFen(game.fen())
-    socketRef.current.emit("move", {roomid:roomid,move:tmp2,id:socketId,fen:game.fen()});
-    console.log('a move sended'+{roomid:roomid,move:tmp2,id:socketId,fen:game.fen()})
-    // setGame(game)
-    return tmp; // null if the move was illegal, the move object if the move was legal
+
+    let color = tmp2.color;
+    if(color===userColor){
+      setGame(tmp)
+      setFen(game.fen())
+
+      socketRef.current.emit("move", {pgn:game.pgn(),roomid:roomid,move:tmp2,id:socketId,fen:game.fen()});
+
+    }
+
+    return; // null if the move was illegal, the move object if the move was legal
   }
 
   function makeRandomMove() {
@@ -209,6 +239,7 @@ export default function PlayRandomMoveEngine() {
   }
 
   function onDrop(sourceSquare, targetSquare) {
+    console.log('droped')
     const move = makeAMove({
       from: sourceSquare,
       to: targetSquare,
@@ -225,35 +256,56 @@ export default function PlayRandomMoveEngine() {
     
     return (
       <div className={styles.main}>
-        <div style={{width:"60vw"}}>
-            <Chessboard position={fen} onPieceDrop={onDrop} boardOrientation={userColor==="w"?"white":"black"}/>
+
+        <div>
+          isPlayer : {isPlayingVar?"Oui":"Non"}
         </div>
 
-        <div className={styles.chat}>
-          <div className={styles.message}>
+        <div className={styles.players_container}>
 
-            {
-              messageArray.map((item,i)=>(
-                <span>
-                  <span>{item.name}</span> <span>{item.message}</span>
-                </span>
-              ))
-            }
+          <span>{oponents.name}</span>
+          <span>{oponents.elo}</span>
 
+        </div>
+        
+        <div className={styles.container_board}>
+          <div style={{width:"40vw"}}>
+              <Chessboard position={fen} onPieceDrop={onDrop} boardOrientation={userColor==="w"?"white":"black"}/>
           </div>
-          <div className={styles.send}>
 
-          <input onChange={(e)=>{setInput(e.target.value)}}></input>
+          <div className={styles.chat}>
+            <div className={styles.message}>
 
-          <Button onClick={()=>{
-              socketRef.current.emit('send-message',{message:input,name:user?user?.name:`Guest`,roomid:roomid,id:socketId})
-              setMessageArray(prevSearchItemArray => {
-                const newSearchItemArray = [...prevSearchItemArray, {message:input,name:`You`}];
-                return newSearchItemArray;
-              });
-          }}>Send a message</Button>
+              {
+                messageArray.map((item,i)=>(
+                  <span>
+                    <span>{item.name}</span> <span>{item.message}</span>
+                  </span>
+                ))
+              }
 
+            </div>
+            <div className={styles.send}>
+
+            <input onChange={(e)=>{setInput(e.target.value)}}></input>
+
+            <Button onClick={()=>{
+                socketRef.current.emit('send-message',{message:input,name:user?user?.name:`Guest`,roomid:roomid,id:socketId})
+                setMessageArray(prevSearchItemArray => {
+                  const newSearchItemArray = [...prevSearchItemArray, {message:input,name:`You`}];
+                  return newSearchItemArray;
+                });
+            }}>Send a message</Button>
+
+            </div>
           </div>
+        </div>
+
+        <div className={styles.players_container}>
+
+          <span>{playerInfo.name}</span>
+          <span>{playerInfo.elo}</span>
+
         </div>
 
       </div>

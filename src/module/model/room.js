@@ -31,11 +31,11 @@ const Room = sequelize.define('rooms', {
     chat:{
         type: DataTypes.TEXT,
         allowNull: false
-    }
-    // board:{
-    //     type: DataTypes.TEXT,
-    //     allowNull: false
-    // },
+    },
+    pgn:{
+        type: DataTypes.TEXT,
+        allowNull: false
+    },
 }, {
     timestamps: false,
     tableName: 'rooms',
@@ -44,7 +44,7 @@ const Room = sequelize.define('rooms', {
 });
 
 (async () => {
-    await Room.sync({});
+    await Room.sync({force:true});
     console.log('La table "room" a été charger');
 })();
 

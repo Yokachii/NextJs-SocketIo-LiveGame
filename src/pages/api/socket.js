@@ -121,6 +121,9 @@ const SocketHandler = async (req, res) => {
           status:`w`,
           lastmove:JSON.stringify({after:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",before:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"}),
           chat:JSON.stringify([]),
+          pgn:`
+[Variant "From Position"]
+[FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1"]`
         })
       })
 
@@ -130,6 +133,7 @@ const SocketHandler = async (req, res) => {
         let room = await Rooms.findOne({where:{id:data.roomid}})
         room.lastmove = JSON.stringify(data.move)
         room.board = data.fen
+        room.pgn = data.pgn
         room.save();
         socket.to(data.roomid).emit('move-played',data)
       })
