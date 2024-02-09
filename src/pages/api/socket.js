@@ -96,7 +96,7 @@ const SocketHandler = (req, res) => {
 
     io.on('connection', socket => {
       socket.on('input-change', msg => {
-        console.log('aaa')
+        console.log(`Test : ${msg.data}`)
         socket.broadcast.emit('update-input', msg)
       })
     })

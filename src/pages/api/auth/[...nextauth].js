@@ -46,8 +46,6 @@ export const authOptions = {
         console.log('|||||||||||||||||||||||||||||||||||||||||||||||||||||||||')
         
         if(userData&&userData.id){
-          console.log('aaa')
-          
           const isPasswordMatch = await isPasswordValid(
             credentials.password,
             userData.password
