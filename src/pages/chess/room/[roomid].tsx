@@ -44,7 +44,17 @@ export default function PlayRandomMoveEngine() {
     
     let mySocket = socketRef.current
 
+    type playerSqlType = {
+      color:string;
+      id:string;
+    }
 
+    type chatItemType = {
+      message:string;
+      name:string;
+      roomid:string;
+      id:string;
+    }
   
     const socketInitializer = async () => {
         await fetch('/api/socket');
@@ -52,7 +62,7 @@ export default function PlayRandomMoveEngine() {
         socketRef.current.on('get-room', () => {
             socketRef.current.emit('set-room',roomid)
         })
-        socketRef.current.on('room-joined',(data:{id:string})=>{
+        socketRef.current.on('room-joined',(data:{id:string,message:string})=>{
             setSocketId(data.id)
         })
         socketRef.current.on('move-played', async (data:{pgn:string;id:string;move:Record<string,string>})=>{
@@ -68,7 +78,7 @@ export default function PlayRandomMoveEngine() {
           // makeAMove(data.move.san)
           // moveOnBoardWithoutRequest(data.move)
         })
-        socketRef.current.on('new-message',(data)=>{
+        socketRef.current.on('new-message',(data:chatItemType)=>{
           if(data.id===socketId) return
           let message = data.message
           let name = data.name
@@ -79,9 +89,9 @@ export default function PlayRandomMoveEngine() {
           });
         })
 
-        socketRef.current.on('set-playing-as', async (data)=>{
+        socketRef.current.on('set-playing-as', async (data:{isFirstTime:boolean,playerType:string,color:string,isOponentsFinded:boolean,isPlaying:boolean,players:Record<string,playerSqlType>,chat:Array<chatItemType>,lastmove:string})=>{
 
-          let {playerType,color,isOponentsFinded,isPlaying,players,chat,lastmove} = data
+          let {isFirstTime,playerType,color,isOponentsFinded,isPlaying,players,chat,lastmove} = data
           console.log('||||||||||||')
           console.log(data)
           console.log(playerType)
@@ -127,23 +137,23 @@ export default function PlayRandomMoveEngine() {
 
           console.log('started as :'+playerType)
 
-          if(playerType=="last") socketRef.current.emit('accept-play',{roomId:roomid,userId:user?.id})
+          if(playerType=="last"&&isFirstTime) socketRef.current.emit('accept-play',{roomId:roomid,userId:user?.id})
           // if(playerType=="first") socketRef.current.emit('accept-play',{roomId:roomid,userId:user?.id})
-        if(playerType=="first"){
-          console.log(players)
+          if(playerType=="first"){
+            console.log(players)
 
-          const response = await fetch('/api/chess/getuser', {method: 'POST',body: JSON.stringify({id:players.player2.id}),headers: {'Content-Type': 'application/json',},});
-          const data = await response.json();
+            const response = await fetch('/api/chess/getuser', {method: 'POST',body: JSON.stringify({id:players.player2.id}),headers: {'Content-Type': 'application/json',},});
+            const data = await response.json();
 
-          console.log(data)
+            console.log(data)
 
-          if(data.success){
+            if(data.success){
+              
+              setOponents({name:data.user.firstname,elo:"1230 (loaded opo)"})
+
+            }
             
-            setOponents({name:data.user.firstname,elo:"1230 (loaded opo)"})
-
           }
-          
-        }
 
         })
 
