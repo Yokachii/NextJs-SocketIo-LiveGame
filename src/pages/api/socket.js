@@ -151,38 +151,113 @@ const SocketHandler = async (req, res) => {
         socket.to(data.roomid).emit('new-message',data)
       })
 
+      socket.on('join-game-alr-start', async (data) => {
 
+        console.log('joni alr start')
+
+        let { roomid,userid } = data
+        let room = await Rooms.findOne({where:{id:roomid}})
+        
+
+        if(room){
+          let players = JSON.parse(room.dataValues.player)
+
+          console.log('datavalue')
+          
+          console.log(userid)
+          if(userid){
+            let user = await Users.findOne({where:{id:userid}})
+            console.log(user)
+            if(user){
+
+
+              let player1 = players.player1
+              let player2 = players.player2
+  
+              console.log('user id test')
+              console.log(userid===player1.id)
+              console.log(userid===player2.id)
+  
+              if(userid===player1.id){
+  
+                socket.emit('set-playing-as',{playerType:"first",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color,isPlaying:true,isOponentsFinded:true,players:players})
+                
+                console.log('set as first by id')
+  
+              }else if(userid===player2.id){
+
+                console.log('set as last by id')
+  
+                socket.emit('set-playing-as',{playerType:"last",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player2.color,isPlaying:true,isOponentsFinded:true,players:players})
+  
+              }else{
+
+                console.log('set as spec (pas le bon)')
+  
+                socket.emit('set-player-spec',{lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),players:players})
+  
+              }
+
+
+            }
+            
+
+          }else{
+            console.log('set as spec' + "pas d'id")
+
+            socket.emit('set-player-spec',{pgn:room.dataValues.pgn,chat:JSON.parse(room.dataValues.chat),players:players})
+
+          }
+
+        }
+
+      })
 
       socket.on('join-game-try', async (data) => {
         let { roomid,userid } = data
         let room = await Rooms.findOne({where:{id:roomid}})
-        let user = await Users.findOne({where:{id:userid}})
-        let players = JSON.parse(room.dataValues.player)
-        let player1 = players.player1
-        let player1user = await Users.findOne({where:{id:player1.id}})
+        if(userid){
+          console.log('i get id')
+          let user = await Users.findOne({where:{id:userid}})
+          let players = JSON.parse(room.dataValues.player)
+          let player1 = players.player1
+          let player1user = await Users.findOne({where:{id:player1.id}})
+
+          if(user.dataValues.id){
+            console.log('user exist')
+
+            // TODO : attendre que le player2 envoie une réponse puis start le 1v1
+            console.log(player1.id)
+            console.log(user.dataValues.id)
+            if(player1.id===user.dataValues.id){
+              console.log('myself')
+              socket.join(`${roomid}/P1`)
+              socket.emit('set-playing-as',{playerType:"first",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color,isPlaying:true,isOponentsFinded:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
+              
+            }else{
+              console.log('p2')
+              
+              socket.emit('set-playing-as',{playerType:"last",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color==="w"?"b":"w",isPlaying:true,isOponentsFinded:true,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{name:user.dataValues.firstname,id:user.dataValues.id}}})
+  
+            }
+  
+          }else{
+
+            console.log('get id but not user exist')
+
+            socket.emit('set-playing-as',{playerType:"",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:"w",isPlaying:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
+          }
+        }else{
+
+          console.log('i dont get id')
+
+          socket.emit('set-playing-as',{playerType:"",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:"w",isPlaying:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
+
+        }
         // console.log('|||||||||||||||||||||||')
         // console.log(user,userid)
         // console.log('|||||||||||||||||||||||')
-        if(user.dataValues.id){
-
-          // TODO : attendre que le player2 envoie une réponse puis start le 1v1
-          console.log(player1.id)
-          console.log(user.dataValues.id)
-          if(player1.id===user.dataValues.id){
-            console.log('myself')
-            socket.join(`${roomid}/P1`)
-            socket.emit('set-playing-as',{playerType:"first",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color,isPlaying:true,isOponentsFinded:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
-            
-          }else{
-            console.log('p2')
-            
-            socket.emit('set-playing-as',{playerType:"last",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color==="w"?"b":"w",isPlaying:true,isOponentsFinded:true,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{name:user.dataValues.firstname,id:user.dataValues.id}}})
-
-          }
-
-        }else{
-          socket.emit('set-playing-as',{playerType:"",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:"w",isPlaying:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
-        }
+        
         // socket.to(roomid).emit
       })
 

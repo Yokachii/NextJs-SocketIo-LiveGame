@@ -79,7 +79,7 @@ export default function PlayRandomMoveEngine() {
           });
         })
 
-        socketRef.current.on('set-playing-as', (data)=>{
+        socketRef.current.on('set-playing-as', async (data)=>{
 
           let {playerType,color,isOponentsFinded,isPlaying,players,chat,lastmove} = data
           console.log('||||||||||||')
@@ -121,7 +121,7 @@ export default function PlayRandomMoveEngine() {
           // Display the board
           setDisplayBoard(true)
           
-          if(isPlaying){
+          if(isPlaying&&isOponentsFinded){
             setIsPlayingVar(true)
           }
 
@@ -129,6 +129,21 @@ export default function PlayRandomMoveEngine() {
 
           if(playerType=="last") socketRef.current.emit('accept-play',{roomId:roomid,userId:user?.id})
           // if(playerType=="first") socketRef.current.emit('accept-play',{roomId:roomid,userId:user?.id})
+        if(playerType=="first"){
+          console.log(players)
+
+          const response = await fetch('/api/chess/getuser', {method: 'POST',body: JSON.stringify({id:players.player2.id}),headers: {'Content-Type': 'application/json',},});
+          const data = await response.json();
+
+          console.log(data)
+
+          if(data.success){
+            
+            setOponents({name:data.user.firstname,elo:"1230 (loaded opo)"})
+
+          }
+          
+        }
 
         })
 
@@ -145,6 +160,63 @@ export default function PlayRandomMoveEngine() {
           let { player2 } = data
 
           setOponents({name:player2.firstname,elo:"1299?"})
+        })
+
+        socketRef.current.on('set-player-spec', async (data)=>{
+
+          let {pgn,chat,players} = data
+
+          let player1 = players.player1
+          let player2 = players.player2
+
+          let name1
+          let name2
+          
+          const response1 = await fetch('/api/chess/getuser', {method: 'POST',body: JSON.stringify({id:player1.id}),headers: {'Content-Type': 'application/json',},});
+          const response2 = await fetch('/api/chess/getuser', {method: 'POST',body: JSON.stringify({id:player2.id}),headers: {'Content-Type': 'application/json',},});
+    
+          const data1 = await response1.json();
+          const data2 = await response2.json();
+
+          console.log(data1.s)
+          console.log(data2.success)
+    
+          if(data1.success){
+
+            name1=data1.user.firstname
+
+          }
+          
+          if(data2.success){
+
+            name2=data2.user.firstname
+
+          }
+
+          console.log(name1,name2)
+
+          // Set chat
+          chat.unshift(messageArray[0])
+          setMessageArray(chat)
+
+          // Set color
+          setUserColor('w')
+
+          if(player1.color==="w"){
+            setPlayerInfo({name:name1?name1:"Can't load name",elo:"1299?. (spec)"})
+            setOponents({name:name2?name2:"Can't load name",elo:"1299?. (spec)"})
+          }else{
+            setPlayerInfo({name:name2?name2:"Can't load name",elo:"1299?. (spec)"})
+            setOponents({name:name1?name1:"Can't load name",elo:"1299?. (spec)"})
+          }
+
+          // Load pgn
+          loadPgn(pgn)
+          console.log('loaded '+pgn)
+          
+          // Display the board
+          setDisplayBoard(true)
+
         })
     }
 
@@ -176,6 +248,8 @@ export default function PlayRandomMoveEngine() {
           }else if(data.room.status==="p"){
 
             // TODO WARNING SET THE PLAYER AS SPEC
+
+            socketRef.current.emit(`join-game-alr-start`,{roomid:roomid,userid:user?.id?user?.id:false})
 
             setIsPlayingVar(false)
 
@@ -341,7 +415,7 @@ export default function PlayRandomMoveEngine() {
 
         <div className={styles.players_container}>
 
-          <span>{user?.name}</span>
+          <span>{playerInfo.name}</span>
           <span>{playerInfo.elo}</span>
 
         </div>
