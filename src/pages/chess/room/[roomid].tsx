@@ -403,7 +403,7 @@ export default function PlayRandomMoveEngine() {
 
               {
                 messageArray.map((item,i)=>(
-                  <span>
+                  <span key={i}>
                     <span>{item.name}</span> <span>{item.message}</span>
                   </span>
                 ))

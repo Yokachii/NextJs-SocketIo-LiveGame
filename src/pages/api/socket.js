@@ -111,26 +111,33 @@ const SocketHandler = async (req, res) => {
       })
 
 
-      socket.on('create-room', data=>{
+      socket.on('create-room', async (data) =>{
         const {roomId, userId} = data
 
-        Rooms.create({
-          id:roomId,
-          board:`rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`,
-          player:JSON.stringify({player1:{color:"w",id:userId},player2:{color:"b",id:false}}),
-          status:`w`,
-          lastmove:JSON.stringify({after:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",before:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"}),
-          chat:JSON.stringify([]),
-          pgn:`
-[Variant "From Position"]
-[FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1"]`
-        }).then(x=>{
+        const user = await Users.findOne({where:{id:userId}})
 
-          socket.emit(`room-created`,{roomId,roomToken:x.token})
+        if(user){
 
-        })
+          Rooms.create({
+            id:roomId,
+            board:`rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`,
+            player:JSON.stringify({player1:{color:"w",id:userId,name:user.dataValues.firstname},player2:{color:"b",id:false}}),
+            status:`w`,
+            lastmove:JSON.stringify({after:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",before:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"}),
+            chat:JSON.stringify([]),
+            pgn:`
+  [Variant "From Position"]
+  [FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1"]`
+          }).then(x=>{
+  
+            socket.emit(`room-created`,{roomId,roomToken:x.token})
+  
+          })
+  
+          socket.join(`${roomId}/P1`)
 
-        socket.join(`${roomId}/P1`)
+        }
+
       })
 
       socket.on(`room-first-connect`, async (data) =>{
@@ -285,7 +292,7 @@ const SocketHandler = async (req, res) => {
           let user2 = await Users.findOne({where:{id:data.userId}})
           let player = JSON.parse(room.dataValues.player)
           let user1 = await Users.findOne({where:{id:player.player1.id}})
-          player.player2 = {color:player.player1.color=="w"?"b":"w",id:data.userId}
+          player.player2 = {color:player.player1.color=="w"?"b":"w",id:data.userId,name:user2.dataValues.firstname}
           room.player=JSON.stringify(player)
           room.status="p"
           room.save()
