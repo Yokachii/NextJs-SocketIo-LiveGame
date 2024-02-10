@@ -92,10 +92,10 @@ export default function PlayRandomMoveEngine() {
         socketRef.current.on('set-playing-as', async (data:{isFirstTime:boolean,playerType:string,color:string,isOponentsFinded:boolean,isPlaying:boolean,players:Record<string,playerSqlType>,chat:Array<chatItemType>,lastmove:string})=>{
 
           let {isFirstTime,playerType,color,isOponentsFinded,isPlaying,players,chat,lastmove} = data
-          console.log('||||||||||||')
-          console.log(data)
-          console.log(playerType)
-          console.log('||||||||||||')
+          // console.log('||||||||||||')
+          // console.log(data)
+          // console.log(playerType)
+          // console.log('||||||||||||')
           
           lastmove = JSON.parse(lastmove)
           let lastboard = lastmove.before
@@ -137,6 +137,7 @@ export default function PlayRandomMoveEngine() {
 
           console.log('started as :'+playerType)
 
+          console.log(playerType,isFirstTime)
           if(playerType=="last"&&isFirstTime) socketRef.current.emit('accept-play',{roomId:roomid,userId:user?.id})
           // if(playerType=="first") socketRef.current.emit('accept-play',{roomId:roomid,userId:user?.id})
           if(playerType=="first"){
@@ -170,6 +171,7 @@ export default function PlayRandomMoveEngine() {
           let { player2 } = data
 
           setOponents({name:player2.firstname,elo:"1299?"})
+          setIsPlayingVar(true)
         })
 
         socketRef.current.on('set-player-spec', async (data)=>{
@@ -181,15 +183,21 @@ export default function PlayRandomMoveEngine() {
 
           let name1
           let name2
+
+          if(player2.id){
+            const response2 = await fetch('/api/chess/getuser', {method: 'POST',body: JSON.stringify({id:player2.id}),headers: {'Content-Type': 'application/json',},});
+            const data2 = await response2.json();
+            
+            if(data2.success){
+  
+              name2=data2.user.firstname
+  
+            }
+          }
           
           const response1 = await fetch('/api/chess/getuser', {method: 'POST',body: JSON.stringify({id:player1.id}),headers: {'Content-Type': 'application/json',},});
-          const response2 = await fetch('/api/chess/getuser', {method: 'POST',body: JSON.stringify({id:player2.id}),headers: {'Content-Type': 'application/json',},});
     
           const data1 = await response1.json();
-          const data2 = await response2.json();
-
-          console.log(data1.s)
-          console.log(data2.success)
     
           if(data1.success){
 
@@ -197,11 +205,6 @@ export default function PlayRandomMoveEngine() {
 
           }
           
-          if(data2.success){
-
-            name2=data2.user.firstname
-
-          }
 
           console.log(name1,name2)
 
@@ -233,7 +236,7 @@ export default function PlayRandomMoveEngine() {
     const fetchRoom = async () => {
       const response = await fetch('/api/chess/getroom', {
         method: 'POST',
-        body: JSON.stringify({id:roomid}),
+        body: JSON.stringify({token:roomid}),
         headers: {
             'Content-Type': 'application/json',
         },

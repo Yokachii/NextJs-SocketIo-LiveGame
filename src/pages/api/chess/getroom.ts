@@ -8,11 +8,11 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method === 'POST') {
-    const {id} = req.body;
+    const {token} = req.body;
 
 
-    const room = await Rooms.findOne({where:{id:id}})
-    console.log(room?.dataValues,id)
+    const room = await Rooms.findOne({where:{token:token}})
+    console.log(room?.dataValues,token)
     if(room){
         res
             .status(201)

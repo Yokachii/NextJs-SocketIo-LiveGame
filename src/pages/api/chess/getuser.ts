@@ -8,6 +8,12 @@ export default async function handler(
   if (req.method === 'POST') {
     const {id} = req.body;
 
+    if(!id){
+      res
+        .status(422)
+        .json({ success: false, message: 'An error occured', user:null });
+      return
+    }
 
     const user = await Users.findOne({where:{id:id}})
     if(user){

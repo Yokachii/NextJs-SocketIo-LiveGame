@@ -117,22 +117,32 @@ const SocketHandler = async (req, res) => {
         Rooms.create({
           id:roomId,
           board:`rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`,
-          player:JSON.stringify({player1:{color:"w",id:userId}}),
+          player:JSON.stringify({player1:{color:"w",id:userId},player2:{color:"b",id:false}}),
           status:`w`,
           lastmove:JSON.stringify({after:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",before:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"}),
           chat:JSON.stringify([]),
           pgn:`
 [Variant "From Position"]
 [FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1"]`
+        }).then(x=>{
+
+          socket.emit(`room-created`,{roomId,roomToken:x.token})
+
         })
 
         socket.join(`${roomId}/P1`)
       })
 
+      socket.on(`room-first-connect`, async (data) =>{
+
+        // socket.join(`${data.roomId}/P1`)
+
+      })
+
 
       socket.on('move', async (data) => {
         console.log(`New move played :`+data)
-        let room = await Rooms.findOne({where:{id:data.roomid}})
+        let room = await Rooms.findOne({where:{token:data.roomid}})
         room.lastmove = JSON.stringify(data.move)
         room.board = data.fen
         room.pgn = data.pgn
@@ -143,7 +153,7 @@ const SocketHandler = async (req, res) => {
 
 
       socket.on('send-message', async (data) => {
-        const room = await Rooms.findOne({where:{id:data.roomid}})
+        const room = await Rooms.findOne({where:{token:data.roomid}})
         let tmp = JSON.parse(room.dataValues.chat)
         tmp.push({message:data.message,name:data.name,id:data.id})
         room.chat = JSON.stringify(tmp)
@@ -156,7 +166,7 @@ const SocketHandler = async (req, res) => {
         console.log('joni alr start')
 
         let { roomid,userid } = data
-        let room = await Rooms.findOne({where:{id:roomid}})
+        let room = await Rooms.findOne({where:{token:roomid}})
         
 
         if(room){
@@ -215,13 +225,13 @@ const SocketHandler = async (req, res) => {
 
       socket.on('join-game-try', async (data) => {
         let { roomid,userid } = data
-        let room = await Rooms.findOne({where:{id:roomid}})
+        let room = await Rooms.findOne({where:{token:roomid}})
+        let players = JSON.parse(room.dataValues.player)
+        let player1 = players.player1
+        let player1user = await Users.findOne({where:{id:player1.id}})
         if(userid){
           console.log('i get id')
           let user = await Users.findOne({where:{id:userid}})
-          let players = JSON.parse(room.dataValues.player)
-          let player1 = players.player1
-          let player1user = await Users.findOne({where:{id:player1.id}})
 
           if(user.dataValues.id){
             console.log('user exist')
@@ -232,7 +242,7 @@ const SocketHandler = async (req, res) => {
             if(player1.id===user.dataValues.id){
               console.log('myself')
               socket.join(`${roomid}/P1`)
-              socket.emit('set-playing-as',{isFirstTime:true,playerType:"first",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color,isPlaying:true,isOponentsFinded:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
+              socket.emit('set-playing-as',{isFirstTime:true,playerType:"first",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color,isPlaying:true,isOponentsFinded:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{name:"Waiting",elo:"1299? (en attente)"}}})
               
             }else{
               console.log('p2')
@@ -245,13 +255,15 @@ const SocketHandler = async (req, res) => {
 
             console.log('get id but not user exist')
 
-            socket.emit('set-playing-as',{playerType:"",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:"w",isPlaying:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
+            // socket.emit('set-playing-as',{playerType:"",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:"w",isPlaying:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{name:"Waiting",elo:"1299? (en attente)"}}})
+            socket.emit('set-player-spec',{pgn:room.dataValues.pgn,chat:JSON.parse(room.dataValues.chat),players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{name:"Waiting",elo:"1299? (en attente)",id:false}}})
           }
         }else{
 
           console.log('i dont get id')
 
-          socket.emit('set-playing-as',{playerType:"",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:"w",isPlaying:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{}}})
+          // socket.emit('set-playing-as',{playerType:"",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:"w",isPlaying:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{name:"Waiting",elo:"1299? (en attente)"}}})
+          socket.emit('set-player-spec',{pgn:room.dataValues.pgn,chat:JSON.parse(room.dataValues.chat),players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{name:"Waiting",elo:"1299? (en attente)",id:false}}})
 
         }
         // console.log('|||||||||||||||||||||||')
@@ -269,7 +281,7 @@ const SocketHandler = async (req, res) => {
         if(data.playerType="last"){
 
           socket.join(`${data.roomId}/P2`)
-          let room = await Rooms.findOne({where:{id:data.roomId}})
+          let room = await Rooms.findOne({where:{token:data.roomId}})
           let user2 = await Users.findOne({where:{id:data.userId}})
           let player = JSON.parse(room.dataValues.player)
           let user1 = await Users.findOne({where:{id:player.player1.id}})
@@ -300,7 +312,7 @@ const SocketHandler = async (req, res) => {
 
               let usersInRoom2 = await io.in(roomIdLet).fetchSockets();
               if(usersInRoom2.length==0){
-                const room = await Rooms.findOne({where:{id:roomIdLet}})
+                const room = await Rooms.findOne({where:{token:roomIdLet}})
                 if(room&&room.dataValues){
 
                   // TODO : arrèter la partie si elle est en cour est donner des résultat

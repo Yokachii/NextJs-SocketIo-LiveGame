@@ -32,21 +32,18 @@ export default function PlayRandomMoveEngine() {
     const socketInitializer = async () => {
         await fetch('/api/socket');
         socketRef.current = io();
-        // socketRef.current.on('get-room', () => {
-        //     console.log('recived')
-        // })
-        // socketRef.current.on('room-joined',(data)=>{
-        //     setSocketId(data.id)
-        //     console.log(data)
-        // })
-        // socketRef.current.on('move-played',(data)=>{
-        //     let id = data.id
-        //     console.log(data)
-        //     if(id===socketId) return
-        //     makeAMove(data.move)
-        // })
-        socketRef.current.on('room-created', async (data:{roomToken:string,roomId:string;})=>{
-            router.push(`/chess/room/${data.roomToken}`)
+        socketRef.current.on('get-room', () => {
+            console.log('recived')
+        })
+        socketRef.current.on('room-joined',(data)=>{
+            setSocketId(data.id)
+            console.log(data)
+        })
+        socketRef.current.on('move-played',(data)=>{
+            let id = data.id
+            console.log(data)
+            if(id===socketId) return
+            makeAMove(data.move)
         })
     }
 
@@ -63,7 +60,7 @@ export default function PlayRandomMoveEngine() {
         {id?(
             <Button onClick={()=>{
                 socketRef.current.emit('create-room',{roomId:input,userId:id})
-                // return router.push(`/chess/room/${input}`)
+                return router.push(`/chess/room/${input}`)
             }}>Create a room</Button>
         ):(
             <Button disabled>Create a room</Button>
