@@ -10,14 +10,6 @@ import { useSession } from "next-auth/react";
 import { Button } from "@mantine/core";
 let socket:any;
 
-type aMove = {
-    from:string;
-    to:string;
-    promotion:string;
-}
-
-
-
 
 
 export default function PlayRandomMoveEngine() {
@@ -46,6 +38,8 @@ export default function PlayRandomMoveEngine() {
 
     type playerSqlType = {
       color:string;
+      name:string;
+      elo:string;
       id:string;
     }
 
@@ -140,25 +134,21 @@ export default function PlayRandomMoveEngine() {
           console.log(playerType,isFirstTime)
           if(playerType=="last"&&isFirstTime) socketRef.current.emit('accept-play',{roomId:roomid,userId:user?.id})
           // if(playerType=="first") socketRef.current.emit('accept-play',{roomId:roomid,userId:user?.id})
-          if(playerType=="first"){
-            console.log(players)
+          if(playerType=="first"||playerType=="last"){
 
-            const response = await fetch('/api/chess/getuser', {method: 'POST',body: JSON.stringify({id:players.player2.id}),headers: {'Content-Type': 'application/json',},});
-            const data = await response.json();
-
-            console.log(data)
-
-            if(data.success){
-              
-              setOponents({name:data.user.firstname,elo:"1230 (loaded opo)"})
-
+            if(players.player1.color===userColor){
+              setOponents({name:players.player2.name,elo:"1200 (opo)"})
+              setPlayerInfo({name:players.player1.name,elo:"1200"})
+            }else{
+              setOponents({name:players.player1.name,elo:"1200 (opo)"})
+              setPlayerInfo({name:players.player2.name,elo:"1200"})
             }
             
           }
 
         })
 
-        socketRef.current.on('game-start', (data)=>{
+        socketRef.current.on('game-start', (data:{oponentsName:string,oponentsElo:string;})=>{
           let {oponentsName,oponentsElo} = data
           console.log(data)
           console.log('game start'+oponentsName+oponentsElo)
@@ -167,14 +157,16 @@ export default function PlayRandomMoveEngine() {
           setOponents({name:oponentsName,elo:oponentsElo})
         })
 
-        socketRef.current.on(`game-starting-as-p1`, (data)=>{
+        socketRef.current.on(`game-starting-as-p1`, (data:{player2:Record<string,string>})=>{
           let { player2 } = data
 
           setOponents({name:player2.firstname,elo:"1299?"})
           setIsPlayingVar(true)
         })
 
-        socketRef.current.on('set-player-spec', async (data)=>{
+        socketRef.current.on('set-player-spec', async (data:{pgn:string,chat:Array<chatItemType>,players:Record<string,playerSqlType>})=>{
+
+          console.log('screeaaammmmm spec')
 
           let {pgn,chat,players} = data
 
@@ -234,6 +226,7 @@ export default function PlayRandomMoveEngine() {
     }
 
     const fetchRoom = async () => {
+      console.log(`fetched ${user?.email} and ${roomid}`)
       const response = await fetch('/api/chess/getroom', {
         method: 'POST',
         body: JSON.stringify({token:roomid}),
@@ -288,7 +281,7 @@ export default function PlayRandomMoveEngine() {
         fetchRoom()
 
         socketInitializer()
-    },[router.isReady])
+    },[router.isReady,session])
 
     function loadPgn(pgn:string){
 
