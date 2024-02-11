@@ -17,6 +17,7 @@ export default async function handler(
         name:name,
         creater:userId,
         private:isPrivate,
+        basefen:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
 
     }).then(x=>{
 

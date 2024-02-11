@@ -24,6 +24,10 @@ const Study = sequelize.define('studys', {
         type: DataTypes.TEXT,
         allowNull: false
     },
+    basefen:{
+        type: DataTypes.TEXT,
+        allowNull: false
+    }
 }, {
     timestamps: false,
     tableName: 'studys',

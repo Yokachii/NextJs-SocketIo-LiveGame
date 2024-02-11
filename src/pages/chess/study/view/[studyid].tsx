@@ -28,6 +28,7 @@ export default function study() {
     const [orientation,setOrientation] = useState('white')
     const [name,setName] = useState('')
     const [moveInt,setMoveInt] = useState(0)
+    const [baseFen,setBaseFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
 
     function onDrop(sourceSquare, targetSquare) {
         console.log('droped')
@@ -46,22 +47,25 @@ export default function study() {
         const data = await response.json();
 
         console.log(data)
-
-        // loadPgn("")
-        loadFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
-
+        
         if(data.success){
-
+            
             let study = data.study
+
+            setBaseFen(study.basefen)
+            loadFen(study.basefen)
+
             setName(study.name)
             let pgn = study.pgn
             setPgn(pgn)
             //@ts-ignore
-            let moves = parse(pgn, {startRule: "game"}).moves;
-            console.log(moves)
-            setTimeout(() => {
-                move(moves[0].notation.notation)
-            }, 1000);
+            if(pgn){
+                let moves = parse(pgn, {startRule: "game"}).moves;
+                console.log(moves)
+                // setTimeout(() => {
+                //     move(moves[0].notation.notation)
+                // }, 1000);
+            }
             
             // loadPgn(pgn)
             // console.log(moves)
@@ -85,7 +89,7 @@ export default function study() {
       try {
         tmp.loadPgn(pgn)
       } catch (error) {
-        console.log(error)
+        // console.log(error)
         return null;
       }
       setGame(tmp)
@@ -97,7 +101,7 @@ export default function study() {
         try {
             tmp.load(fen)
         } catch (error) {
-            console.log(error)
+            // console.log(error)
             return null;
         }
         setGame(tmp)
@@ -110,7 +114,7 @@ export default function study() {
         try {
             tmp.move(move)
         } catch (error) {
-            console.log(error)
+            // console.log(error)
             return null;
         }
         setGame(tmp)
@@ -119,15 +123,19 @@ export default function study() {
     }
 
     function setByInt(int:number,pgn:string){
-        console.log('a')
+        console.log('a',int)
 
         // @ts-ignore
         let moves = parse(pgn, {startRule: "game"}).moves;
         console.log(int,pgn)
         console.log(moves)
-        if(int>moves.length){
+
+        if(int>moves.length||int<0){
+            console.log('b')
             loadPgn(pgn)
         }else{
+            setMoveInt(int)
+            loadFen(baseFen)
 
             for (let i = 0; i < int; i++) {
                 const myMove = moves[i];
@@ -140,16 +148,8 @@ export default function study() {
 
     }
 
-    const plusAMove = async ()=>{
-        console.log('ici')
-
-        setMoveInt(moveInt+1)
-        console.log(moveInt)
-        setByInt(moveInt,pgn)
-
-    }
-    const moinAMove = async ()=>{
-
+    const setAMove = async (int:number)=>{
+        setByInt(int,pgn)
     }
 
   if(isRoomExist){
@@ -161,12 +161,14 @@ export default function study() {
               <Chessboard position={fen} onPieceDrop={onDrop} boardOrientation={orientation}/>
         </div>
 
-        <button onClick={()=>{
-            plusAMove()
-        }}>{`<--`}</button>
-        <button onClick={()=>{
-            moinAMove()
-        }}>{`-->`}</button>
+        <Button onClick={()=>{
+            console.log('moved')
+            setAMove(moveInt-1)
+        }}>Moin</Button>
+        <Button onClick={()=>{
+            console.log('moved')
+            setAMove(moveInt+1)
+        }}>Plus</Button>
 
       </div>
     )
