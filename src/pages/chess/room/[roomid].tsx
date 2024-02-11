@@ -83,9 +83,9 @@ export default function PlayRandomMoveEngine() {
           });
         })
 
-        socketRef.current.on('set-playing-as', async (data:{isFirstTime:boolean,playerType:string,color:string,isOponentsFinded:boolean,isPlaying:boolean,players:Record<string,playerSqlType>,chat:Array<chatItemType>,lastmove:string})=>{
+        socketRef.current.on('set-playing-as', async (data:{pgn:string,isFirstTime:boolean,playerType:string,color:string,isOponentsFinded:boolean,isPlaying:boolean,players:Record<string,playerSqlType>,chat:Array<chatItemType>,lastmove:string})=>{
 
-          let {isFirstTime,playerType,color,isOponentsFinded,isPlaying,players,chat,lastmove} = data
+          let {pgn,isFirstTime,playerType,color,isOponentsFinded,isPlaying,players,chat,lastmove} = data
           // console.log('||||||||||||')
           // console.log(data)
           // console.log(playerType)
@@ -102,25 +102,26 @@ export default function PlayRandomMoveEngine() {
           setUserColor(color)
 
           // Set the fen on the board
-          let lastfen:string = lastboard?lastboard:`rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`
-          setTimeout(() => {
-            setFen(lastfen)
-            if(lastmove&&lastmove.from){
+          loadPgn(pgn)
+          // let lastfen:string = lastboard?lastboard:`rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`
+          // setTimeout(() => {
+          //   setFen(lastfen)
+          //   if(lastmove&&lastmove.from){
 
-              let tmp = game
-              tmp.load(lastfen)
-              try {
-                tmp.move(lastmove)
-              } catch (error) {
-                return null;
-              }
-              setGame(tmp)
-              setFen(game.fen())
-            }else{
+          //     let tmp = game
+          //     tmp.load(lastfen)
+          //     try {
+          //       tmp.move(lastmove)
+          //     } catch (error) {
+          //       return null;
+          //     }
+          //     setGame(tmp)
+          //     setFen(game.fen())
+          //   }else{
 
-            }
+          //   }
 
-          }, 300);
+          // }, 300);
           
           // Display the board
           setDisplayBoard(true)
