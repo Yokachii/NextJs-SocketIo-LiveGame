@@ -1,6 +1,1 @@
-Set le player2 quand il arrive
-V? | Empécher les joueur en spec/sans compte de bouger les pièce
-V? | et bloquer les pièce de la couleur adverse
-
-SET THE PLAYER AS SPEC ([roomid].tsx) ligne 178
-chech les "isFirstTime"
+Refaire au propre a partie d'une nouvelle page en dure pour les study
