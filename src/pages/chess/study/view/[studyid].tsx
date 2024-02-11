@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { useRouter } from "next/router";
@@ -9,6 +9,7 @@ import styles from './styles.module.scss'
 import { useSession } from "next-auth/react";
 import { Button } from "@mantine/core";
 import { parse } from '@mliebelt/pgn-parser'
+import Variant from "@/components/core/Variant";
 let socket:any;
 
 
@@ -32,6 +33,17 @@ export default function study() {
     const [baseFen,setBaseFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
     const [baseMoveNumber,setBaseMoveNumber] = useState(0)
 
+
+    const tmp = useMemo(()=>studyPgn?parse(studyPgn, {startRule: "game"}).moves:[],[studyPgn])
+    
+    useEffect(()=>{
+        // if(!tmp[0]) return;
+
+        console.log(tmp.slice(0,5).map(({notation:{notation}})=>notation))
+
+    },[tmp])
+    
+
     function onDrop(sourceSquare:any, targetSquare:any) {
         console.log('droped')
     }
@@ -47,26 +59,23 @@ export default function study() {
         });
 
         const data = await response.json();
-
-        console.log(data)
         
         if(data.success){
             
             let study = data.study
 
-            setBaseFen(study.basefen)
-            loadFen(study.basefen)
-
-            setName(study.name)
             let pgn = study.pgn
+            setBaseFen(study.basefen)
             setStudyPgn(pgn)
+
+            loadFen(study.basefen)
+            
+            // setName(study.name)
             // setPgn(pgn)
-            console.log(pgn)
             //@ts-ignore
             if(pgn){
                 let moves = parse(pgn, {startRule: "game"}).moves;
                 setBaseMoveNumber(moves.length)
-                console.log(moves)
                 // setTimeout(() => {
                 //     move(moves[0].notation.notation)
                 // }, 1000);
@@ -128,9 +137,12 @@ export default function study() {
     }
 
     function setByInt(int:number,tmpPgn:string){
-        console.log('a',int)
+        // console.log('a',int)
 
-        console.log(tmpPgn)
+        // console.log(tmpPgn)
+
+        console.log('tesstttt')
+        console.log(int)
 
         // @ts-ignore
         let moves = parse(tmpPgn, {startRule: "game"}).moves;
@@ -159,14 +171,18 @@ export default function study() {
 
     const playAList = (array:Array<string>)=>{
 
+        console.log(array)
+
         loadFen(baseFen)
 
-        for(let item of array){
+        setTimeout(() => {
+            for(let item of array){
 
-            // console.log(item)
-            move(item)
-
-        }
+                // console.log(item)
+                move(item)
+    
+            }
+        }, 1000);
 
     }
 
@@ -174,81 +190,104 @@ export default function study() {
         setByInt(int,studyPgn)
     }
 
-    const getLink = (parsed,pgn)=>{
+    // const getLink = (parsed,pgn)=>{
 
-        let tab = []
+    //     let tab = []
         
-        if(pgn){
-            for (let i = 0; i < parsed.length; i++) {
-                const move = parsed[i];
+    //     if(pgn){
+    //         for (let i = 0; i < parsed.length; i++) {
+    //             const move = parsed[i];
 
                 
-                tab.push({str:move.notation.notation,int:i,variation:move.variations[0]?move.variations:false})
-            }
-        }
+    //             tab.push({str:move.notation.notation,int:i,variation:move.variations[0]?move.variations:false})
+    //         }
+    //     }
 
-        return tab
+    //     return tab
         
-    }
+    // }
 
-    const createBoucle = (parse:Array<Record<string,any>>,varInt:number,beforeVar:any,chemain:Array<string>,)=>{
+    // const createBoucle = (parse:Array<Record<string,any>>,varInt:number,beforeVar:any,chemain:Array<string>,)=>{
 
-        // console.log(chemain)
-        let myNewChem = new Array()
-        for(let itemTmp of chemain){
-            myNewChem.push(itemTmp)
-        }
+    //     // console.log(parse)
+    //     // return;
 
-        if(varInt==0){
+    //     // console.log(chemain)
+    //     let myNewChem = new Array()
+    //     for(let itemTmp of chemain){
+    //         myNewChem.push(itemTmp)
+    //     }
+
+    //     if(varInt==0){
             
-            // setBaseMoveNumber(parse.length)
-            // console.log()
-        }else{
-            myNewChem.pop()
-        }
+    //         // setBaseMoveNumber(parse.length)
+    //         // console.log()
+    //     }else{
+    //         myNewChem.pop()
+    //     }
+        
 
-        return (
-            <>
-            {getLink(parse,studyPgn).map((item,i:number)=>{
-                myNewChem.push(item.str)
-                // console.log(item)
-                return (
-                    <div key={i} style={{marginTop:`${varInt*2}rem`}} className={`${styles.button_container} ${varInt===0?`${styles.first_btn}`:`${styles.no_first}`}`}>
-                        <button type="aa" onClick={(e)=>{
-                            if(varInt===0){
-                                setByInt(item.int+1,studyPgn)
-                            }else{
-                                // let before
-                                console.log(myNewChem)
-                                playAList(myNewChem)
-                                console.log(e.type)
-                            }
-                        }}>
-                            {item.str} | {item.int} | {varInt} | {beforeVar.str}
-                        </button>
-                        {item.variation?(
-                            <div className={styles.var_container} style={{height:`${item.variation.length*5}rem`}}>
-                                {item.variation.map((item2,i2)=>(
-                                    <div key={i2} className={styles.variation}>
-                                        {createBoucle(item2,varInt+1,item,myNewChem)}
-                                        {/* {getLink(item2,studyPgn).map((item3,i3)=>(
-                                            <div key={i3}>
-                                                <span>{item3.str}</span>
-                                            </div>
-                                        ))} */}
-                                    </div>
-                                ))}
-                            </div>
-                        ):``}
-                    </div>
-                )
-            })}
-            </>
-        )
+    //     return (
+    //         <>
+    //         {getLink(parse,studyPgn).map((item,i:number)=>{
+    //             myNewChem.push(item.str)
+    //             return (
+    //                 <div key={i} style={{marginTop:`${varInt*2}rem`}} className={`${styles.button_container} ${varInt===0?`${styles.first_btn}`:`${styles.no_first}`}`}>
+    //                     <button onClick={(e)=>{
+    //                         if(varInt===0){
+    //                             setByInt(item.int+1,studyPgn)
+    //                         }else{
+    //                             // let before
+    //                             // let myT
+    //                             console.log(myNewChem)
+    //                             playAList(myNewChem)
+    //                         }
+    //                     }}>
+    //                         {item.str} | {item.int} | {varInt} | {beforeVar.str}
+    //                     </button>
+    //                     {item.variation?(
+    //                         <div className={styles.var_container} style={{height:`${item.variation.length*5}rem`}}>
+    //                             {item.variation.map((item2,i2)=>(
+    //                                 <div key={i2} className={styles.variation}>
+    //                                     {createBoucle(item2,varInt+1,item,myNewChem)}
+    //                                     {/* {getLink(item2,studyPgn).map((item3,i3)=>(
+    //                                         <div key={i3}>
+    //                                             <span>{item3.str}</span>
+    //                                         </div>
+    //                                     ))} */}
+    //                                 </div>
+    //                             ))}
+    //                         </div>
+    //                     ):``}
+    //                 </div>
+    //             )
+    //         })}
+    //         </>
+    //     )
 
-    }
+    // }
+
+    // const mytest = (mymove:Record<string,any>)=>{
+
+    //     if(!mymove.variations.length){
+
+    //         return [mymove]
+
+    //     }else{
+            
+    //         mymove.variations.map((item:any)=>{
+
+    //             // return {...item,parent:}
+
+    //         })
+            
+    //     }
+
+    // }
 
   if(isRoomExist){
+
+    
     
     return (
       <div className={styles.main}>
@@ -260,8 +299,24 @@ export default function study() {
             </div>
 
             <div className={styles.moves} style={{height:`${(baseMoveNumber/2)*4}rem`}}>
+                
+                {
+                    
+                    tmp.map((item,i)=>{
 
-                {createBoucle(studyPgn?parse(studyPgn, {startRule: "game"}).moves:``,0,"",[])}
+                        const x = tmp.slice(0,i).map(({notation:{notation}})=>notation)
+                        console.log('|||||||||||||||')
+                        console.log(item.notation.notation)
+                        console.log(x)
+                        console.log('|||||||||||||||')
+
+                        return (
+                            <div>
+                                <Variant moveint={i} pgn={studyPgn} setByInt={setByInt} playAList={playAList} int={0} move={item.notation.notation} parent={x} variants={item.variations}></Variant>
+                            </div>
+                        )
+                    })
+                }
 
             </div>
 

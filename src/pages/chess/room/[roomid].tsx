@@ -33,8 +33,6 @@ export default function PlayRandomMoveEngine() {
 
     const [oponents,setOponents] = useState({name:"?",elo:"1200?"})
     const [playerInfo,setPlayerInfo] = useState({name:user?.name,elo:"1200?"})
-    
-    let mySocket = socketRef.current
 
     type playerSqlType = {
       color:string;
