@@ -8,39 +8,21 @@ type Props = {
     variants:Array<any>;
     setByInt:Function;
     playeMoveList:Function;
+    setArrows:Function;
     pgn:string;
     moveint:number;
     comment:string;
+    arrows:Array<string>;
 }
 
 export default function Variant(props:Props){
 
-    const { move,parent,int,variants,pgn,moveint,playeMoveList,setByInt,comment } = props
-
-    // const [myParent,setMyParent] = useState<Array<string>|null>()
-    
-    // const newParentWithoutLast = parent.slice(0,-1)
-    // const newParent = useMemo(()=>[...parent,move],[parent])
-    // // const newParent = parent
-    // console.log(newParent)
-
-    // console.log(move)
-    // console.log(parent)
+    const { arrows,setArrows,move,parent,int,variants,pgn,moveint,playeMoveList,setByInt,comment } = props
     
     useEffect(()=>{
 
-        // if(!parent) return;
-
-        // const tmp = Array.from(parent)
-        // tmp.push(move)
-        // setMyParent(tmp)
-
         
     },[move,parent])
-
-    // if(!myParent) return (
-    //     <></>
-    // )
     
     return(
         
@@ -49,8 +31,10 @@ export default function Variant(props:Props){
                 // console.log(int)
                 if(int===0){
                     setByInt(moveint+1,pgn)
+                    setArrows(arrows)
                 }else{
                     playeMoveList([...parent,move])
+                    setArrows(arrows)
                     console.log(parent)
                 }
             }}>
@@ -74,7 +58,7 @@ export default function Variant(props:Props){
 
                             return (
                                 <div className={`${styles.variation} ${styles.aMoveRaw}`}>
-                                    <Variant comment={variantMove?.commentAfter?variantMove?.commentAfter:''}  moveint={moveint+1} playeMoveList={playeMoveList} setByInt={setByInt} pgn={pgn} move={variantMove.notation.notation} parent={parent.concat(tmp2)} int={int+1} variants={variantMove.variations}></Variant>
+                                    <Variant arrows={variantMove.commentDiag?.colorArrows} setArrows={setArrows} comment={variantMove?.commentAfter?variantMove?.commentAfter:''}  moveint={moveint+1} playeMoveList={playeMoveList} setByInt={setByInt} pgn={pgn} move={variantMove.notation.notation} parent={parent.concat(tmp2)} int={int+1} variants={variantMove.variations}></Variant>
                                     {/* <Variant moveint={moveint+1} pgn={pgn} playAList={playAList} setByInt={setByInt} move={variantMove.notation.notation} parent={[...parent,move]} int={int+1} variants={variantMove.variations}></Variant> */}
                                 </div>
                             )
