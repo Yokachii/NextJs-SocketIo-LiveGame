@@ -1,6 +1,37 @@
 .button_container{
+
+    border-left: 4px solid black;
+
+    .btn{
+
+        border:none;
+        outline: none;
+
+    }
+
     
+    .comment{
+        
+    }
+    
+    .no_first{
+    
+        // background: rgb(186, 202, 124) !important;
+        transition: .2s;
+        
+    }
+
+    .no_first:hover{
+        background: gray;
+    }
+    
+    .first_rank{
+        
+        background: red;
+        
+    }
 }
+
 
 .aMoveRaw{
     // background-color:red;

@@ -44,8 +44,8 @@ export default function Variant(props:Props){
     
     return(
         
-        <div className={`${styles.button_container}`} style={{marginLeft:`${int>0?`${int*2}rem`:`0rem`}`}}>
-            <button onClick={(e)=>{
+        <div className={`${styles.button_container}`} style={{marginLeft:`${int>0?`${int*1.5}rem`:`0rem`}`}}>
+            <button className={`${styles.btn} ${int===0?`${styles.first_rank}`:`${styles.no_first}`}`} onClick={(e)=>{
                 // console.log(int)
                 if(int===0){
                     setByInt(moveint+1,pgn)

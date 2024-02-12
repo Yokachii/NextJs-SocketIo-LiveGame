@@ -99,6 +99,10 @@ export default function MyTest() {
 
     }
 
+    function onDrop(sourceSquare:any, targetSquare:any) {
+        console.log('droped')
+    }
+
     // console.log(parseStudy)
 
     useEffect(()=>{
@@ -114,7 +118,7 @@ export default function MyTest() {
 
 
             <div style={{width:"40vw"}}>
-                <Chessboard position={boardPosition.actuel} boardOrientation={'white'}/>
+                <Chessboard position={boardPosition.actuel} boardOrientation={'white'} onPieceDrop={onDrop}/>
             </div>
 
             
