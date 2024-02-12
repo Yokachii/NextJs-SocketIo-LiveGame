@@ -7,21 +7,25 @@ type Props = {
     int:number;
     variants:Array<any>;
     setByInt:Function;
-    playAList:Function;
+    playeMoveList:Function;
     pgn:string;
     moveint:number;
+    comment:string;
 }
 
 export default function Variant(props:Props){
 
-    const { move,parent,int,variants,setByInt,playAList,pgn,moveint } = props
+    const { move,parent,int,variants,pgn,moveint,playeMoveList,setByInt,comment } = props
 
     // const [myParent,setMyParent] = useState<Array<string>|null>()
     
     // const newParentWithoutLast = parent.slice(0,-1)
-    const newParent = useMemo(()=>[...parent,move],[parent])
-    // const newParent = parent
-    console.log(newParent)
+    // const newParent = useMemo(()=>[...parent,move],[parent])
+    // // const newParent = parent
+    // console.log(newParent)
+
+    // console.log(move)
+    // console.log(parent)
     
     useEffect(()=>{
 
@@ -46,21 +50,35 @@ export default function Variant(props:Props){
                 if(int===0){
                     setByInt(moveint+1,pgn)
                 }else{
-                    console.log('tesstttt')
+                    playeMoveList([...parent,move])
                     console.log(parent)
-                    playAList(newParent)
                 }
             }}>
                 {move}
             </button>
+
+            {comment?(
+                <div className={styles.comment}>
+
+                    {comment?comment:``}
+
+                </div>
+            ):``}
             <div className={styles.var_container}>
                 {variants.map((moves)=>(
                     <>
-                        {moves.map((variantMove)=>(
-                            <div className={styles.variation}>
-                                <Variant moveint={moveint+1} pgn={pgn} playAList={playAList} setByInt={setByInt} move={variantMove.notation.notation} parent={newParent} int={int+1} variants={variantMove.variations}></Variant>
-                            </div>
-                        ))} 
+                        {moves.map((variantMove,i)=>{
+
+                            const shad = [...moves]
+                            const tmp2 = shad.splice(0,i).map(({notation:{notation}})=>notation)
+
+                            return (
+                                <div className={`${styles.variation} ${styles.aMoveRaw}`}>
+                                    <Variant comment={variantMove?.commentAfter?variantMove?.commentAfter:''}  moveint={moveint+1} playeMoveList={playeMoveList} setByInt={setByInt} pgn={pgn} move={variantMove.notation.notation} parent={parent.concat(tmp2)} int={int+1} variants={variantMove.variations}></Variant>
+                                    {/* <Variant moveint={moveint+1} pgn={pgn} playAList={playAList} setByInt={setByInt} move={variantMove.notation.notation} parent={[...parent,move]} int={int+1} variants={variantMove.variations}></Variant> */}
+                                </div>
+                            )
+                        })}
                     </>
                 ))}
             </div>
