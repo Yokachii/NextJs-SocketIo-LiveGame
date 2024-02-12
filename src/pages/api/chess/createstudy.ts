@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import Studys from '../../../module/model/study';
 import sequelizeUser from '../../../module/model/user'
 import { hashPassword } from '../../../utils/hash';
+import Users from '../../../module/model/user';
 
 export default async function handler(
   req: NextApiRequest,
@@ -9,6 +10,9 @@ export default async function handler(
 ) {
   if (req.method === 'POST') {
     const {name,userId,isPrivate} = req.body;
+
+
+    const user = await Users.findOne({where:{id:userId}})
 
 
     const study = await Studys.create({
@@ -22,6 +26,8 @@ export default async function handler(
     }).then(x=>{
 
         console.log(x)
+        // @ts-ignore
+        // user.addUser_Study(x, {through: { isPrivate:isPrivate }})
 
         res
             .status(201)

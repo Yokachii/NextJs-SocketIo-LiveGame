@@ -1,5 +1,7 @@
 const { Sequelize, DataTypes, UUID, UUIDV1, json } = require('sequelize');
 import sequelize from '../sequelize'
+import User from './user';
+import User_Study from './userstudy';
 
 const Study = sequelize.define('studys', {
     id: {
@@ -37,6 +39,10 @@ const Study = sequelize.define('studys', {
 
 (async () => {
     await Study.sync({});
+
+    // Study.belongsTo(User, { through: User_Study });
+    Study.belongsTo(User, {through: "User_Study"})
+
     console.log('La table "Study" a été charger');
 })();
 

@@ -100,6 +100,7 @@ export default function PlayRandomMoveEngine() {
           setUserColor(color)
 
           // Set the fen on the board
+          console.log(pgn)
           loadPgn(pgn)
           // let lastfen:string = lastboard?lastboard:`rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`
           // setTimeout(() => {

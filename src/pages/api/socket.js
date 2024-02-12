@@ -127,7 +127,7 @@ const SocketHandler = async (req, res) => {
             chat:JSON.stringify([]),
             pgn:`
   [Variant "From Position"]
-  [FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1"]`
+  [FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]`
           }).then(x=>{
   
             socket.emit(`room-created`,{roomId,roomToken:x.token})

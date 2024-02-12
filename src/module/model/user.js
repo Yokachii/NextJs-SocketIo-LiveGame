@@ -1,5 +1,9 @@
 const { Sequelize, DataTypes, UUID, UUIDV1, json } = require('sequelize');
 import sequelize from '../sequelize'
+import Room from './room';
+import Study from './study';
+import User_Room from './useroom'
+import User_Study from './userstudy'
 
 const User = sequelize.define('users', {
     id: {
@@ -73,6 +77,16 @@ const User = sequelize.define('users', {
 
 (async () => {
     await User.sync({});
+
+    User.hasMany(Study)
+    // User.hasMany(Room)
+
+    // User.belongsToMany(Room, { through: User_Room });
+    // User.hasMany(User_Room)
+
+    // User.belongsToMany(Study, { through: User_Study });
+    // User.hasMany(User_Study)
+
     console.log('La table "user" a été charger');
 })();
 

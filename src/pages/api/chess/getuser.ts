@@ -16,6 +16,7 @@ export default async function handler(
     }
 
     const user = await Users.findOne({where:{id:id}})
+    
     if(user){
         res
             .status(201)
