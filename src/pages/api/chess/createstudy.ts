@@ -19,7 +19,7 @@ export default async function handler(
 
         pgn:``,
         name:name,
-        creater:userId,
+        // creater:userId,
         private:isPrivate,
         basefen:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
 
@@ -28,6 +28,7 @@ export default async function handler(
         console.log(x)
         // @ts-ignore
         // user.addUser_Study(x, {through: { isPrivate:isPrivate }})
+        user.addStudy(x)
 
         res
             .status(201)

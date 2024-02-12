@@ -14,10 +14,6 @@ const Study = sequelize.define('studys', {
         type: DataTypes.TEXT,
         allowNull: false
     },
-    creater:{
-        type: DataTypes.TEXT,
-        allowNull: false
-    },
     private:{
         type: DataTypes.BOOLEAN,
         allowNull: false
@@ -40,8 +36,7 @@ const Study = sequelize.define('studys', {
 (async () => {
     await Study.sync({});
 
-    // Study.belongsTo(User, { through: User_Study });
-    Study.belongsTo(User, {through: "User_Study"})
+    Study.belongsTo(User, { as: 'user', foreignKey:`id` })
 
     console.log('La table "Study" a été charger');
 })();
