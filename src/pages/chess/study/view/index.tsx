@@ -11,6 +11,7 @@ export default function MyTest() {
     const [game, setGame] = useState(new Chess());
     const [boardPosition, setBoardPosition] = useState({actuel:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',base:`rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`})
     const [moveInt,setMoveInt] = useState(0)
+    const [lastArray,setLastArray] = useState<Array<string>>([])
     
     
     
@@ -70,12 +71,18 @@ export default function MyTest() {
             setMoveInt(int)
             loadFen(boardPosition.base)
 
+            let tmpArray = []
+
             for (let i = 0; i < int; i++) {
                 const myMove = moves[i];
                 const notation = myMove.notation
+
+                tmpArray.push(notation.notation)
                 
                 move(notation.notation)
             }
+
+            setLastArray(tmpArray)
 
             // setPgn(game.pgn())
 
@@ -85,11 +92,50 @@ export default function MyTest() {
 
     function playAList(array:Array<string>){
 
-        // console.log(array)
+        // let tmpPgn = game.pgn()
+        // let parsePgn = parse(tmpPgn, {startRule: "game"}).moves
+        // parsePgn.map(({notation:{notation}})=>notation)
+        // console.log(parsePgn)
+        
+        let tmp1 = lastArray.join(` `)
+        let tmp2 = array.join(` `)
 
-        loadFen(boardPosition.base)
+        console.log('||||||')
+        console.log(tmp1)
+        console.log(tmp2)
+        console.log(tmp2.startsWith(tmp1))
+        console.log(array)
+        console.log('||||||')
+
+        if(tmp1===tmp2){
+            // console.log('same so load base fen')
+            console.log('not change')
+            return
+            loadFen(boardPosition.base)
+        }
+
+        if(tmp2.startsWith(tmp1)&&lastArray.length>0){
+
+            let tmpArray = [...lastArray]
+            tmpArray.splice(0,array.length)
+
+            playAList(lastArray)
+
+            
+        }else if (tmp1.startsWith(tmp2)&&lastArray.length>0){
+
+            // PEUX ÊTRE PLUS TARD (reculer dans les coup)
+
+            loadFen(boardPosition.base)
+
+        }else{
+            loadFen(boardPosition.base)
+        }
+        
 
         setTimeout(() => {
+            setLastArray(array)
+            
             for(let item of array){
 
                 move(item)
