@@ -16,22 +16,20 @@ export default function Variant(props:Props){
 
     const { move,parent,int,variants,setByInt,playAList,pgn,moveint } = props
 
-    const [myParent,setMyParent] = useState<Array<string>|null>()
+    // const [myParent,setMyParent] = useState<Array<string>|null>()
     
     // const newParentWithoutLast = parent.slice(0,-1)
-    // const newParent = useMemo(()=>[...parent,move],[parent])
+    const newParent = useMemo(()=>[...parent,move],[parent])
+    // const newParent = parent
+    console.log(newParent)
     
     useEffect(()=>{
 
-        if(!parent) return;
+        // if(!parent) return;
 
-        const tmp = Array.from(parent)
-        tmp.push(move)
-        setMyParent(tmp)
-        
-        console.log(move)
-        console.log(parent)
-        console.log(tmp)
+        // const tmp = Array.from(parent)
+        // tmp.push(move)
+        // setMyParent(tmp)
 
         
     },[move,parent])
@@ -50,7 +48,7 @@ export default function Variant(props:Props){
                 }else{
                     console.log('tesstttt')
                     console.log(parent)
-                    playAList(myParent)
+                    playAList(newParent)
                 }
             }}>
                 {move}
@@ -60,7 +58,7 @@ export default function Variant(props:Props){
                     <>
                         {moves.map((variantMove)=>(
                             <div className={styles.variation}>
-                                <Variant moveint={moveint+1} pgn={pgn} playAList={playAList} setByInt={setByInt} move={variantMove.notation.notation} parent={myParent} int={int+1} variants={variantMove.variations}></Variant>
+                                <Variant moveint={moveint+1} pgn={pgn} playAList={playAList} setByInt={setByInt} move={variantMove.notation.notation} parent={newParent} int={int+1} variants={variantMove.variations}></Variant>
                             </div>
                         ))} 
                     </>
