@@ -18,7 +18,7 @@ export default async function handler(
     const user = await Users.findByPk(id)
 
     // @ts-ignore
-    const studies = await user.getStudies();
+    const studies = await user.getRooms();
     
     if(studies){
         res

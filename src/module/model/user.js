@@ -79,6 +79,7 @@ const User = sequelize.define('users', {
     await User.sync({});
 
     User.hasMany(Study, { as: 'studies', foreignKey:`id` })
+    User.hasMany(Room, { as: 'rooms', foreignKey:`id` })
 
     console.log('La table "user" a été charger');
 })();

@@ -51,6 +51,8 @@ const Room = sequelize.define('rooms', {
     // Room.belongsTo(User, { through: User_Room });
     // Room.belongsTo(User_Room, {through: User_Room})
 
+    Room.belongsTo(User, { as: 'user', foreignKey:`id` })
+
     console.log('La table "room" a été charger');
 })();
 

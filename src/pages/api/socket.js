@@ -292,6 +292,9 @@ const SocketHandler = async (req, res) => {
           let user2 = await Users.findOne({where:{id:data.userId}})
           let player = JSON.parse(room.dataValues.player)
           let user1 = await Users.findOne({where:{id:player.player1.id}})
+          user2.addRoom(room)
+          user1.addRoom(room)
+          console.log(user1,user2)
           player.player2 = {color:player.player1.color=="w"?"b":"w",id:data.userId,name:user2.dataValues.firstname}
           room.player=JSON.stringify(player)
           room.status="p"
