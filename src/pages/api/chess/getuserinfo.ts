@@ -30,7 +30,7 @@ export default async function handler(
             },
             {
                 model: User,
-                as: 'friends',
+                as: 'user1Friends',
                 attributes: ['id', 'firstname', 'lastname', 'email'],
             },
         ]

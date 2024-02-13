@@ -1,12 +1,9 @@
-import Variant from "@/components/core/Variant"
-import { parse } from "@mliebelt/pgn-parser"
-import { Chess } from "chess.js";
 import { useEffect, useState } from "react";
-import { Chessboard } from "react-chessboard";
 import styles from './styles.module.scss'
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import Friends from "@/components/core/Friend";
+import AddFriends from "@/components/core/Friend/AddList";
 
 type Arrow = Array<string>
 
@@ -16,39 +13,103 @@ export default function MyTest() {
     let data = session.data
     let user = data?.user
 
-    const [friends,setFriends] = useState([])
+    const [finded,setFinded] = useState([])
+    const [suggest,setSuggest] = useState([])
 
     // Hooks + Socket
 
-    const fetchFriend = async () => {
+    const searchFriend = async (name:string) => {
         // console.log(studyid)
-        const response = await fetch('/api/chess/getuserinfo', {
+        const response = await fetch('/api/chess/searchfriend', {
             method: 'POST',
-            body: JSON.stringify({id:user?.id}),
+            body: JSON.stringify({userId:user?.id,name}),
             headers: {
                 'Content-Type': 'application/json',
             },
         });
 
-        const data2 = await response.json();
+        const data = await response.json();
+
+        console.log(data)
         
-        console.log(data2)
+        if(data.success){
+
+            let users = data.user
+            setFinded(users)
+
+        }else{
+
+            // setFinded([])
+
+        }
+    }
+
+    const searchFriendAdd = async (name:string) => {
+        // console.log(studyid)
+        const response = await fetch('/api/chess/searchusernofriend', {
+            method: 'POST',
+            body: JSON.stringify({name,userId:user?.id,name}),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const data = await response.json();
+
+        console.log(data)
+        
+        if(data.success){
+
+            let users = data.user
+            setSuggest(users)
+
+        }else{
+
+            // setFinded([])
+
+        }
     }
 
     useEffect(()=>{
-        fetchFriend()
+        console.log(user?.name)
+        searchFriend('')
+        searchFriendAdd('')
+        // searchFriend()
     },[session])
 
-    
+    if(user?.id){
+        
         return (
     
             <div className={styles.container}>
-
-                <Friends friends={[]}/>
+    
+                <input onChange={(e)=>{searchFriend(e.target.value); searchFriendAdd(e.target.value)}}></input>
+    
+                <div>
+                    <div>
+                        Friends :
+                        <Friends friends={finded}/>
+                    </div>
+                    <div>
+                        Suggestion :
+                        <AddFriends friends={suggest} user={user}/>
+                    </div>
+                </div>
     
             </div>
     
         )
+        
+    }else{
+
+        return(
+            <div>
+                Need login
+            </div>
+        )
+
+    }
+    
 
     
 }

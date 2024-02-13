@@ -21,7 +21,7 @@ export default function User(props:Props){
         
         <div className={styles.main}>
 
-            {user.firstname}
+            {user?.firstname}
 
         </div>
 

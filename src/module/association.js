@@ -10,14 +10,14 @@ User.hasMany(Study, { as: 'studies', foreignKey:`userId` });
 User.hasMany(Room, { as: 'rooms', foreignKey: 'userId' });
 
 User.belongsToMany(User, {
-    as: 'friends',
+    as: 'user1Friends',
     through: Friendship,
     foreignKey: 'user1Id',
     otherKey: 'user2Id'
 });
 
 User.belongsToMany(User, {
-    as: 'friends',
+    as: 'user2Friends',
     through: Friendship,
     foreignKey: 'user2Id',
     otherKey: 'user1Id'

@@ -1,5 +1,6 @@
 const { Sequelize, DataTypes, UUID, UUIDV4, json } = require('sequelize');
 import sequelize from '../sequelize'
+import User from './user';
 
 const Friendship = sequelize.define('friendships', {
     id: {
@@ -8,7 +9,22 @@ const Friendship = sequelize.define('friendships', {
         allowNull: false,
         primaryKey: true
     },
-    // ... other fields if needed
+    user1Id: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        references: {
+            model: User,
+            key: 'id'
+        }
+    },
+    user2Id: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        references: {
+            model: User,
+            key: 'id'
+        }
+    },
 }, {
     timestamps: false,
     tableName: 'friendships',
@@ -17,7 +33,7 @@ const Friendship = sequelize.define('friendships', {
 });
 
 (async () => {
-    await Friendship.sync({force:true});
+    await Friendship.sync({});
 
     console.log('La table "room" a été charger');
 })();
