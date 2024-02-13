@@ -22,7 +22,17 @@ export default async function handler(
                 model: Room,
                 as: 'rooms', // Use the alias defined in the User model
                 attributes: ['token', 'board', 'player', 'status', 'lastmove', 'chat', 'pgn'] // Specify the attributes you want to include
-            }
+            },
+            {
+                model: Study, // Assuming Study is the model for studies
+                as: 'studies', // Use the alias defined in the User model
+                attributes: ['id', 'pgn', 'private', 'name', 'basefen'], // Specify the study attributes you want to include
+            },
+            {
+                model: User,
+                as: 'friends',
+                attributes: ['id', 'firstname', 'lastname', 'email'],
+            },
         ]
     });
 
@@ -32,7 +42,7 @@ export default async function handler(
         // const room = await user.getRooms();
         res
             .status(201)
-            .json({ success: true, message: 'User geted succesfully', user });
+            .json({ success: true, message: 'User geted succesfully with room and study', user });
     }else{
         res
             .status(422)
