@@ -85,9 +85,8 @@
 // export default SocketHandler
 
 import { Server } from 'Socket.IO'
-import Rooms from '@/module/model/room'
-import { where } from 'sequelize'
-import Users from '@/module/model/user'
+
+import {Room,User,Study} from '@/module/association'
 
 const SocketHandler = async (req, res) => {
   if (res.socket.server.io) {
@@ -114,11 +113,11 @@ const SocketHandler = async (req, res) => {
       socket.on('create-room', async (data) =>{
         const {roomId, userId} = data
 
-        const user = await Users.findOne({where:{id:userId}})
+        const user = await User.findOne({where:{id:userId}})
 
         if(user){
 
-          Rooms.create({
+          Room.create({
             id:roomId,
             board:`rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`,
             player:JSON.stringify({player1:{color:"w",id:userId,name:user.dataValues.firstname},player2:{color:"b",id:false}}),
@@ -127,7 +126,8 @@ const SocketHandler = async (req, res) => {
             chat:JSON.stringify([]),
             pgn:`
   [Variant "From Position"]
-  [FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]`
+  [FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]`,
+            userId:userId,
           }).then(x=>{
   
             socket.emit(`room-created`,{roomId,roomToken:x.token})
@@ -149,7 +149,7 @@ const SocketHandler = async (req, res) => {
 
       socket.on('move', async (data) => {
         console.log(`New move played :`+data)
-        let room = await Rooms.findOne({where:{token:data.roomid}})
+        let room = await Room.findOne({where:{token:data.roomid}})
         room.lastmove = JSON.stringify(data.move)
         room.board = data.fen
         room.pgn = data.pgn
@@ -160,7 +160,7 @@ const SocketHandler = async (req, res) => {
 
 
       socket.on('send-message', async (data) => {
-        const room = await Rooms.findOne({where:{token:data.roomid}})
+        const room = await Room.findOne({where:{token:data.roomid}})
         let tmp = JSON.parse(room.dataValues.chat)
         tmp.push({message:data.message,name:data.name,id:data.id})
         room.chat = JSON.stringify(tmp)
@@ -173,7 +173,7 @@ const SocketHandler = async (req, res) => {
         console.log('joni alr start')
 
         let { roomid,userid } = data
-        let room = await Rooms.findOne({where:{token:roomid}})
+        let room = await Room.findOne({where:{token:roomid}})
         
 
         if(room){
@@ -183,7 +183,7 @@ const SocketHandler = async (req, res) => {
           
           console.log(userid)
           if(userid){
-            let user = await Users.findOne({where:{id:userid}})
+            let user = await User.findOne({where:{id:userid}})
             console.log(user)
             if(user){
 
@@ -232,13 +232,13 @@ const SocketHandler = async (req, res) => {
 
       socket.on('join-game-try', async (data) => {
         let { roomid,userid } = data
-        let room = await Rooms.findOne({where:{token:roomid}})
+        let room = await Room.findOne({where:{token:roomid}})
         let players = JSON.parse(room.dataValues.player)
         let player1 = players.player1
-        let player1user = await Users.findOne({where:{id:player1.id}})
+        let player1user = await User.findOne({where:{id:player1.id}})
         if(userid){
           console.log('i get id')
-          let user = await Users.findOne({where:{id:userid}})
+          let user = await User.findOne({where:{id:userid}})
 
           if(user.dataValues.id){
             console.log('user exist')
@@ -288,10 +288,10 @@ const SocketHandler = async (req, res) => {
         if(data.playerType="last"){
 
           socket.join(`${data.roomId}/P2`)
-          let room = await Rooms.findOne({where:{token:data.roomId}})
-          let user2 = await Users.findOne({where:{id:data.userId}})
+          let room = await Room.findOne({where:{token:data.roomId}})
+          let user2 = await User.findOne({where:{id:data.userId}})
           let player = JSON.parse(room.dataValues.player)
-          let user1 = await Users.findOne({where:{id:player.player1.id}})
+          let user1 = await User.findOne({where:{id:player.player1.id}})
           user2.addRoom(room)
           user1.addRoom(room)
           console.log(user1,user2)
@@ -322,7 +322,7 @@ const SocketHandler = async (req, res) => {
 
               let usersInRoom2 = await io.in(roomIdLet).fetchSockets();
               if(usersInRoom2.length==0){
-                const room = await Rooms.findOne({where:{token:roomIdLet}})
+                const room = await Room.findOne({where:{token:roomIdLet}})
                 if(room&&room.dataValues){
 
                   // TODO : arrèter la partie si elle est en cour est donner des résultat

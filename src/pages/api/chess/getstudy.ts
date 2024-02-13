@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import Studys from '../../../module/model/study';
-import sequelizeUser from '../../../module/model/user'
+import {Room,User,Study} from '@/module/association'
 import { hashPassword } from '../../../utils/hash';
 
 export default async function handler(
@@ -11,7 +10,7 @@ export default async function handler(
     const {id} = req.body;
 
 
-    const study = await Studys.findOne({where:{id:id}})
+    const study = await Study.findOne({where:{id:id}})
     console.log(study?.dataValues,id)
     if(study){
         res

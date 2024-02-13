@@ -1,1 +1,1 @@
-Refaire au propre a partie d'une nouvelle page en dure pour les study
+Optimisation des state dans les partie

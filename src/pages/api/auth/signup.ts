@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import Users from '../../../module/model/user';
-import sequelizeUser from '../../../module/model/user'
+import {Room,User,Study} from '@/module/association'
 import { hashPassword } from '../../../utils/hash';
 // import type User from '../../../module/type'
 
@@ -12,9 +11,9 @@ export default async function handler(
     const newUser = req.body;
 
     // Check if user exists
-    console.log(newUser,await Users.findOne({ where: {email:newUser.email }}))
+    console.log(newUser,await User.findOne({ where: {email:newUser.email }}))
 
-    const userExists = await Users.findOne({ where: {email:newUser.email }})
+    const userExists = await User.findOne({ where: {email:newUser.email }})
     if (userExists) {
       res.status(422).json({
         success: false,
@@ -31,7 +30,7 @@ export default async function handler(
     // const storeUser = new User(newUser);
     // await storeUser.save();
 
-    const user = await Users.create({
+    const user = await User.create({
       firstname:newUser.name,
       lastname:"test tqt",
       email:newUser.email,

@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import Rooms from '../../../module/model/room';
-import sequelizeUser from '../../../module/model/user'
+import {Room,User,Study} from '@/module/association'
 import { hashPassword } from '../../../utils/hash';
 
 export default async function handler(
@@ -11,7 +10,7 @@ export default async function handler(
     const {token} = req.body;
 
 
-    const room = await Rooms.findOne({where:{token:token}})
+    const room = await Room.findOne({where:{token:token}})
     console.log(room?.dataValues,token)
     if(room){
         res

@@ -1,9 +1,5 @@
 const { Sequelize, DataTypes, UUID, UUIDV1, json } = require('sequelize');
 import sequelize from '../sequelize'
-import Room from './room';
-import Study from './study';
-import User_Room from './useroom'
-import User_Study from './userstudy'
 
 const User = sequelize.define('users', {
     id: {
@@ -77,9 +73,6 @@ const User = sequelize.define('users', {
 
 (async () => {
     await User.sync({});
-
-    User.hasMany(Study, { as: 'studies', foreignKey:`id` })
-    User.hasMany(Room, { as: 'rooms', foreignKey:`id` })
 
     console.log('La table "user" a été charger');
 })();

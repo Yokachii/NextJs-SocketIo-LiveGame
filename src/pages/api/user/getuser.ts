@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import Users from '../../../module/model/user';
-import sequelizeUser from '../../../module/model/user'
+import {Room,User,Study} from '@/module/association'
 import { hashPassword } from '../../../utils/hash';
 
 export default async function handler(
@@ -12,7 +11,7 @@ export default async function handler(
     console.log(id,`&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&`)
 
 
-    const user = await Users.findOne({where:{id:id}})
+    const user = await User.findOne({where:{id:id}})
     console.log(user?.dataValues,id)
     if(user){
         res

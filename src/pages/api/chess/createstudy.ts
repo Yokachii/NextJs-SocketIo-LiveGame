@@ -1,8 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import Studys from '../../../module/model/study';
-import sequelizeUser from '../../../module/model/user'
+import {Room,User,Study} from '@/module/association'
 import { hashPassword } from '../../../utils/hash';
-import Users from '../../../module/model/user';
 
 export default async function handler(
   req: NextApiRequest,
@@ -12,10 +10,10 @@ export default async function handler(
     const {name,userId,isPrivate} = req.body;
 
 
-    const user = await Users.findOne({where:{id:userId}})
+    const user = await User.findOne({where:{id:userId}})
 
 
-    const study = await Studys.create({
+    const study = await Study.create({
 
         pgn:``,
         name:name,

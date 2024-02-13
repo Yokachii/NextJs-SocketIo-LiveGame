@@ -1,5 +1,3 @@
-// import User from "@/module/model/user";
-
 import { useEffect, useState } from "react";
 
 const AddLink = (id:string) => {

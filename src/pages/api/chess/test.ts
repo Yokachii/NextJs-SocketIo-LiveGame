@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import Users from '../../../module/model/user';
+import {Room,User,Study} from '@/module/association'
 
 export default async function handler(
   req: NextApiRequest,
@@ -15,7 +15,7 @@ export default async function handler(
       return
     }
 
-    const user = await Users.findByPk(id)
+    const user = await User.findByPk(id)
 
     // @ts-ignore
     const studies = await user.getRooms();

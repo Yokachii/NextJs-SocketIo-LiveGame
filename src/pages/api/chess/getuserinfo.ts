@@ -15,12 +15,24 @@ export default async function handler(
       return
     }
 
-    const user = await User.findOne({where:{id:id}})
+    const user = await User.findOne({
+        where: { id: id },
+        include: [
+            {
+                model: Room,
+                as: 'rooms', // Use the alias defined in the User model
+                attributes: ['token', 'board', 'player', 'status', 'lastmove', 'chat', 'pgn'] // Specify the attributes you want to include
+            }
+        ]
+    });
+
+    // @ts-ignore
     
     if(user){
+        // const room = await user.getRooms();
         res
             .status(201)
-            .json({ success: true, message: 'Room geted succesfully', user });
+            .json({ success: true, message: 'User geted succesfully', user });
     }else{
         res
             .status(422)

@@ -1,7 +1,6 @@
 const { Sequelize, DataTypes, UUID, UUIDV1, json } = require('sequelize');
 import sequelize from '../sequelize'
 import User from './user';
-import User_Study from './userstudy';
 
 const Study = sequelize.define('studys', {
     id: {
@@ -9,6 +8,14 @@ const Study = sequelize.define('studys', {
       defaultValue: Sequelize.UUIDV4,
       allowNull: false,
       primaryKey: true
+    },
+    userId: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        references: {
+            model: User,
+            key: 'id'
+        }
     },
     pgn:{
         type: DataTypes.TEXT,
@@ -35,8 +42,6 @@ const Study = sequelize.define('studys', {
 
 (async () => {
     await Study.sync({});
-
-    Study.belongsTo(User, { as: 'user', foreignKey:`id` })
 
     console.log('La table "Study" a été charger');
 })();

@@ -88,9 +88,6 @@ export default function PlayRandomMoveEngine() {
           // console.log(data)
           // console.log(playerType)
           // console.log('||||||||||||')
-          
-          lastmove = JSON.parse(lastmove)
-          let lastboard = lastmove.before
 
           // Get the chat
           chat.unshift(messageArray[0])
@@ -102,31 +99,39 @@ export default function PlayRandomMoveEngine() {
           // Set the fen on the board
           console.log(pgn)
           loadPgn(pgn)
-          // let lastfen:string = lastboard?lastboard:`rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`
-          // setTimeout(() => {
-          //   setFen(lastfen)
-          //   if(lastmove&&lastmove.from){
-
-          //     let tmp = game
-          //     tmp.load(lastfen)
-          //     try {
-          //       tmp.move(lastmove)
-          //     } catch (error) {
-          //       return null;
-          //     }
-          //     setGame(tmp)
-          //     setFen(game.fen())
-          //   }else{
-
-          //   }
-
-          // }, 300);
+          
           
           // Display the board
           setDisplayBoard(true)
           
           if(isPlaying&&isOponentsFinded){
             setIsPlayingVar(true)
+          }
+
+          if(isOponentsFinded){
+            // const response = await fetch('/api/chess/getuserinfo', {
+            //     method: 'POST',
+            //     body: JSON.stringify({id:userid}),
+            //     headers: {
+            //         'Content-Type': 'application/json',
+            //     },
+            // });
+    
+            // const data = await response.json();
+    
+            // console.log(data)
+            
+            // if(data.success){
+                
+    
+            //     setUser(data.user)
+    
+    
+            // }else{
+    
+            //     setIsUserExist(false)
+    
+            // }
           }
 
           console.log('started as :'+playerType)

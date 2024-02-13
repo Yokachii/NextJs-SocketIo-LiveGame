@@ -2,7 +2,7 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google"
 import NextAuth from "next-auth"
-import User from '@/module/model/user'
+import {Room,User,Study} from '@/module/association'
 import { isPasswordValid } from '@/utils/hash';
 
 export const authOptions = {

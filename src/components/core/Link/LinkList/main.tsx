@@ -1,5 +1,4 @@
 "use client";
-// import User from "@/module/model/user";
 
 import { useEffect, useState } from "react";
 import { CopyButton, Button } from "@mantine/core";

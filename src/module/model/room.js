@@ -1,7 +1,6 @@
 const { Sequelize, DataTypes, UUID, UUIDV1, json } = require('sequelize');
 import sequelize from '../sequelize'
 import User from './user';
-import User_Room from './useroom';
 
 const Room = sequelize.define('rooms', {
     token: {
@@ -26,6 +25,14 @@ const Room = sequelize.define('rooms', {
         type: DataTypes.TEXT,
         allowNull: false
     },
+    userId: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        references: {
+            model: User,
+            key: 'id'
+        }
+    },
     lastmove:{
         type: DataTypes.TEXT,
         allowNull: false
@@ -47,11 +54,6 @@ const Room = sequelize.define('rooms', {
 
 (async () => {
     await Room.sync({});
-
-    // Room.belongsTo(User, { through: User_Room });
-    // Room.belongsTo(User_Room, {through: User_Room})
-
-    Room.belongsTo(User, { as: 'user', foreignKey:`id` })
 
     console.log('La table "room" a été charger');
 })();
