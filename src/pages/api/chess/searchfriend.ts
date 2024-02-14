@@ -13,30 +13,41 @@ export default async function handler(
     const user = await User.findOne({
         where: { id: userId },
         include: [
+            // {
+            //     model: User,
+            //     as: 'user1Friends',
+            //     attributes: ['id', 'firstname', 'lastname', 'email'],
+            //     where: {
+            //         firstname: {
+            //             [Op.like]: `${name}%`, // Case-insensitive LIKE query
+            //         },
+            //     },
+            // },
+            // {
+            //     model: User,
+            //     as: 'user2Friends',
+            //     attributes: ['id', 'firstname', 'lastname', 'email'],
+            //     where: {
+            //         firstname: {
+            //             [Op.like]: `${name}%`, // Case-insensitive LIKE query
+            //         },
+            //     },
+            // },
             {
                 model: User,
                 as: 'user1Friends',
                 attributes: ['id', 'firstname', 'lastname', 'email'],
-                where: {
-                    firstname: {
-                        [Op.like]: `${name}%`, // Case-insensitive LIKE query
-                    },
-                },
-            },
-            {
-                model: User,
-                as: 'user2Friends',
-                attributes: ['id', 'firstname', 'lastname', 'email'],
-                where: {
-                    firstname: {
-                        [Op.like]: `${name}%`, // Case-insensitive LIKE query
-                    },
-                },
+                where:{
+                  firstname: {
+                      [Op.like]: `${name}%`, // Case-insensitive LIKE query
+                  },
+                }
             },
         ],
     });
+    
 
-    console.log(user)
+    // console.log(user)
 
     if(user){
         res

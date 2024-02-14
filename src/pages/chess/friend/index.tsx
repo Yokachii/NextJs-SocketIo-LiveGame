@@ -34,7 +34,7 @@ export default function MyTest() {
         
         if(data.success){
 
-            let users = data.user
+            let users = data.userFriend
             setFinded(users)
 
         }else{
@@ -72,7 +72,7 @@ export default function MyTest() {
 
     useEffect(()=>{
         console.log(user?.name)
-        searchFriend('')
+        // searchFriend('')
         searchFriendAdd('')
         // searchFriend()
     },[session])
@@ -83,18 +83,35 @@ export default function MyTest() {
     
             <div className={styles.container}>
     
-                <input onChange={(e)=>{searchFriend(e.target.value); searchFriendAdd(e.target.value)}}></input>
+                <input onChange={async (e)=>{
+                    // searchFriend(e.target.value); 
+                    searchFriendAdd(e.target.value);
+                    
+                    // const response = await fetch('/api/chess/getuserinfo', {
+                    //     method: 'POST',
+                    //     body: JSON.stringify({id:user?.id}),
+                    //     headers: {
+                    //         'Content-Type': 'application/json',
+                    //     },
+                    // });
+            
+                    // const data = await response.json();
+            
+                    // console.log(data)
+                    }}></input>
     
                 <div>
-                    <div>
+                    {/* <div>
                         Friends :
                         <Friends friends={finded}/>
-                    </div>
+                    </div> */}
                     <div>
                         Suggestion :
-                        <AddFriends friends={suggest} user={user}/>
+                        {/* <AddFriends friends={suggest} user={user}/> */}
                     </div>
                 </div>
+
+                {JSON.stringify(suggest)}
     
             </div>
     

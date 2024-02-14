@@ -32,7 +32,7 @@ export default function MyTest() {
         
         if(data.success){
 
-            let users = data.user
+            let users = data.user[0]
             setFinded(users)
 
         }else{

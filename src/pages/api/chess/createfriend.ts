@@ -23,13 +23,14 @@ export default async function handler(
     
         if (!existingFriendship) {
             // Friendship doesn't exist, create it
-            const newFriendship = await Friendship.create({
-                user1Id,
-                user2Id,
-                // ... other fields if needed
-            });
-    
-            console.log('Friendship created:', newFriendship.toJSON());
+            // const newFriendship = await Friendship.create({
+            //     user1Id,
+            //     user2Id,
+            //     // ... other fields if needed
+            // });
+            await Friendship.create({ user1Id: user1Id, user2Id: user2Id });
+            await Friendship.create({ user1Id: user2Id, user2Id: user1Id });
+            
             res
                 .status(201)
                 .json({ success: true, message: 'User geted succesfully with room and study', friendship:newFriendship.toJSON() });
