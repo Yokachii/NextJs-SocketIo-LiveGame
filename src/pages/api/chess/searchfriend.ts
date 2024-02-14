@@ -10,39 +10,65 @@ export default async function handler(
   if (req.method === 'POST') {
     const {userId,name} = req.body;
 
+    // const user = await User.findOne({
+    //     where: { id: userId },
+    //     include: [
+    //         // {
+    //         //     model: User,
+    //         //     as: 'user1Friends',
+    //         //     attributes: ['id', 'firstname', 'lastname', 'email'],
+    //         //     where: {
+    //         //         firstname: {
+    //         //             [Op.like]: `${name}%`, // Case-insensitive LIKE query
+    //         //         },
+    //         //     },
+    //         // },
+    //         // {
+    //         //     model: User,
+    //         //     as: 'user2Friends',
+    //         //     attributes: ['id', 'firstname', 'lastname', 'email'],
+    //         //     where: {
+    //         //         firstname: {
+    //         //             [Op.like]: `${name}%`, // Case-insensitive LIKE query
+    //         //         },
+    //         //     },
+    //         // },
+    //         {
+    //             model: User,
+    //             as: 'user1Friends',
+    //             attributes: ['id', 'firstname', 'lastname', 'email'],
+    //             where:{
+    //               firstname: {
+    //                   [Op.like]: `${name}%`, // Case-insensitive LIKE query
+    //               },
+    //             }
+    //         },
+    //     ],
+    // });
+
     const user = await User.findOne({
         where: { id: userId },
         include: [
-            // {
-            //     model: User,
-            //     as: 'user1Friends',
-            //     attributes: ['id', 'firstname', 'lastname', 'email'],
-            //     where: {
-            //         firstname: {
-            //             [Op.like]: `${name}%`, // Case-insensitive LIKE query
-            //         },
-            //     },
-            // },
+            {
+                model: User,
+                as: 'user1Friends',
+                attributes: ['id', 'firstname', 'lastname', 'email'],
+                where: {
+                    firstname:{
+                        [Op.like]:`${name}%`
+                    }
+                },
+            },
             // {
             //     model: User,
             //     as: 'user2Friends',
             //     attributes: ['id', 'firstname', 'lastname', 'email'],
             //     where: {
-            //         firstname: {
-            //             [Op.like]: `${name}%`, // Case-insensitive LIKE query
-            //         },
+            //         firstname:{
+            //             [Op.like]:`${name}%`
+            //         }
             //     },
             // },
-            {
-                model: User,
-                as: 'user1Friends',
-                attributes: ['id', 'firstname', 'lastname', 'email'],
-                where:{
-                  firstname: {
-                      [Op.like]: `${name}%`, // Case-insensitive LIKE query
-                  },
-                }
-            },
         ],
     });
     

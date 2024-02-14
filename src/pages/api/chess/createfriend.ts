@@ -30,10 +30,10 @@ export default async function handler(
             // });
             await Friendship.create({ user1Id: user1Id, user2Id: user2Id });
             await Friendship.create({ user1Id: user2Id, user2Id: user1Id });
-            
+
             res
                 .status(201)
-                .json({ success: true, message: 'User geted succesfully with room and study', friendship:newFriendship.toJSON() });
+                .json({ success: true, message: 'User geted succesfully with room and study'});
         } else {
             res
                 .status(422)

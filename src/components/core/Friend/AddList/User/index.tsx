@@ -14,9 +14,10 @@ type Props = {
 export default function User(props:Props){
 
     const { user,friend } = props
+    const [buttonState,setButtonState] = useState(`ready`)
 
     const addFriend = async () => {
-        // console.log(studyid)
+        setButtonState(`load`)
         const response = await fetch('/api/chess/createfriend', {
             method: 'POST',
             body: JSON.stringify({user1Id:user?.id,user2Id:friend?.id}),
@@ -32,6 +33,7 @@ export default function User(props:Props){
         if(data.success){
 
             let users = data.user
+            setButtonState("disabled")
 
         }else{
 
@@ -49,7 +51,7 @@ export default function User(props:Props){
 
             <Link href={`/chess/users/${friend.id}`}>{friend.firstname}</Link>
 
-            <Button onClick={()=>{addFriend()}}>Ajouter</Button>
+            <Button data-disabled={buttonState=="disabled"} loading={buttonState==="load"} loaderProps={{ type: 'dots' }} onClick={()=>{addFriend()}}>Ajouter</Button>
     
         </div>
     
