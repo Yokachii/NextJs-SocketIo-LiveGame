@@ -1,18 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import styles from './styles.module.scss'
-import User from './User/index';
+import User from '../User/index';
 import { UserInfo } from '@/types/data'
 
 type Props = {
 
     friends:Array<UserInfo>;
-    user:UserInfo
+    userId:string;
     
 }
 
 export default function AddFriends(props:Props){
 
-    const { friends,user } = props
+    const { friends,userId } = props
     
     useEffect(()=>{
 
@@ -25,7 +25,7 @@ export default function AddFriends(props:Props){
 
             {friends.map((item,i)=>(
 
-                <User user={user} friend={item} key={i}/>
+                <User type={`add`} userId={userId} friend={item} key={i}/>
 
             ))}
 

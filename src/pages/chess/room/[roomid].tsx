@@ -8,7 +8,7 @@ import Link from "next/link";
 import styles from './styles.module.scss'
 import { useSession } from "next-auth/react";
 import { Button } from "@mantine/core";
-import {MoveInfo, chatItemType,playerSqlType} from '@/types/data'
+import {MoveInfo, ChatItemType,PlayerSqlType} from '@/types/data'
 let socket:any;
 
 

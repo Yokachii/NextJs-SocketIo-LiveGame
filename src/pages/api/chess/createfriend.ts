@@ -20,14 +20,12 @@ export default async function handler(
                 ],
             },
         });
+
+        console.log(existingFriendship)
     
         if (!existingFriendship) {
+            console.log('first step')
             // Friendship doesn't exist, create it
-            // const newFriendship = await Friendship.create({
-            //     user1Id,
-            //     user2Id,
-            //     // ... other fields if needed
-            // });
             await Friendship.create({ user1Id: user1Id, user2Id: user2Id });
             await Friendship.create({ user1Id: user2Id, user2Id: user1Id });
 

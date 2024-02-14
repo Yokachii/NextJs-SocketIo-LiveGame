@@ -6,12 +6,13 @@ import { UserInfo } from '@/types/data'
 type Props = {
 
     friends:Array<UserInfo>
+    userId:string;
     
 }
 
 export default function Friends(props:Props){
 
-    const { friends } = props
+    const { friends,userId } = props
     
     useEffect(()=>{
 
@@ -24,7 +25,7 @@ export default function Friends(props:Props){
 
             {friends.map((item,i)=>(
 
-                <User user={item} key={i}/>
+                <User type={"allr"} friend={item} userId={userId} key={i}/>
 
             ))}
 

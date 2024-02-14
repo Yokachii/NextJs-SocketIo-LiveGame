@@ -75,4 +75,11 @@ type MoveInfo = {
 
 }
 
-export type { UserTypeWithRoom,UserInfo,PlayerSqlType,ChatItemType,MoveInfo };
+type Session = {
+  id:string;
+  name?:string|null|undefined;
+  email?:string|null|undefined;
+  image?:string|null|undefined;
+}
+
+export type { Session,UserTypeWithRoom,UserInfo,PlayerSqlType,ChatItemType,MoveInfo };

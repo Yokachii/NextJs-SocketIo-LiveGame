@@ -4,14 +4,14 @@ import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import Friends from "@/components/core/Friend";
 import AddFriends from "@/components/core/Friend/AddList";
-
-type Arrow = Array<string>
+import { Session } from "@/types/data";
 
 export default function MyTest() {
 
     let session = useSession()
     let data = session.data
-    let user = data?.user
+    let user:Session = data?.user
+    let userId = user?.id
 
     const [finded,setFinded] = useState([])
     const [suggest,setSuggest] = useState([])
@@ -24,7 +24,7 @@ export default function MyTest() {
         console.log(name)
         const response = await fetch('/api/chess/searchfriend', {
             method: 'POST',
-            body: JSON.stringify({userId:user?.id,name}),
+            body: JSON.stringify({userId:userId,name}),
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -50,7 +50,7 @@ export default function MyTest() {
         // console.log(studyid)
         const response = await fetch('/api/chess/searchusernofriend', {
             method: 'POST',
-            body: JSON.stringify({name:name?name:"yoka",userId:user?.id}),
+            body: JSON.stringify({userId:userId,name}),
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -92,11 +92,11 @@ export default function MyTest() {
                 <div>
                     <div>
                         Friends :
-                        <Friends friends={finded}/>
+                        <Friends friends={finded} userId={userId}/>
                     </div>
                     <div>
                         Suggestion :
-                        <AddFriends friends={suggest} user={user}/>
+                        <AddFriends friends={suggest} userId={userId}/>
                     </div>
                 </div>
 
