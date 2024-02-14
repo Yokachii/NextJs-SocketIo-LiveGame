@@ -33,6 +33,46 @@ type UserInfo = {
   todaytask?:string;
   widgettask?:string;
   links?:string;
+  rooms?:string;
+  user1Friends?:Array<Friends1>;
+  user2Friends?:Array<Friends1>;
+  studys?:string;
 }
 
-export type { UserTypeWithRoom,UserInfo };
+type Friends1 = {
+  email:string;
+  firstname:string;
+  friendships:FriendShip;
+  id:string;
+  lastname:string;
+}
+
+type FriendShip = {
+  id:string;
+  user1Id:string;
+  user2Id:string;
+}
+
+type PlayerSqlType = {
+  color:string;
+  name:string;
+  elo:string;
+  id:string;
+}
+
+type ChatItemType = {
+  message:string;
+  name:string;
+  roomid:string;
+  id:string;
+}
+
+type MoveInfo = {
+
+  from:string;
+  to:string;
+  promotion?:string;
+
+}
+
+export type { UserTypeWithRoom,UserInfo,PlayerSqlType,ChatItemType,MoveInfo };

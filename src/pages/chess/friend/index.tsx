@@ -20,6 +20,8 @@ export default function MyTest() {
 
     const searchFriend = async (name:string) => {
         // console.log(studyid)
+        console.log('name bellow')
+        console.log(name)
         const response = await fetch('/api/chess/searchfriend', {
             method: 'POST',
             body: JSON.stringify({userId:user?.id,name}),
@@ -30,7 +32,7 @@ export default function MyTest() {
 
         const data = await response.json();
 
-        console.log(data)
+        // console.log(data)
         
         if(data.success){
 
@@ -48,7 +50,7 @@ export default function MyTest() {
         // console.log(studyid)
         const response = await fetch('/api/chess/searchusernofriend', {
             method: 'POST',
-            body: JSON.stringify({name,userId:user?.id,name}),
+            body: JSON.stringify({name:name?name:"yoka",userId:user?.id}),
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -56,7 +58,7 @@ export default function MyTest() {
 
         const data = await response.json();
 
-        // console.log(data)
+        console.log(data)
         
         if(data.success){
 
@@ -71,7 +73,6 @@ export default function MyTest() {
     }
 
     useEffect(()=>{
-        console.log(user?.name)
         searchFriend('');
         searchFriendAdd('')
         // searchFriend()

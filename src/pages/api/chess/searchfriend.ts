@@ -46,43 +46,50 @@ export default async function handler(
     //     ],
     // });
 
-    const user = await User.findOne({
-        where: { id: userId },
-        include: [
-            {
-                model: User,
-                as: 'user1Friends',
-                attributes: ['id', 'firstname', 'lastname', 'email'],
-                where: {
-                    firstname:{
-                        [Op.like]:`${name}%`
-                    }
-                },
-            },
-            // {
-            //     model: User,
-            //     as: 'user2Friends',
-            //     attributes: ['id', 'firstname', 'lastname', 'email'],
-            //     where: {
-            //         firstname:{
-            //             [Op.like]:`${name}%`
-            //         }
-            //     },
-            // },
-        ],
-    });
-    
-
-    // console.log(user)
-
-    if(user){
-        res
-            .status(201)
-            .json({ success: true, message: 'Room geted succesfully', user });
-    }else{
+    if(!userId){
         res
             .status(422)
-            .json({ success: false, message: 'An error occured', user:null });
+            .json({ success: false, message: 'No userId', user:null });
+        return
+    }
+
+    try {
+
+        const user = await User.findOne({
+            where: { id: userId },
+            include: [
+                {
+                    model: User,
+                    as: 'user1Friends',
+                    attributes: ['id', 'firstname', 'lastname', 'email'],
+                    where: {
+                        firstname:{
+                            [Op.like]:`${name}%`
+                        }
+                    },
+                },
+            ],
+        });
+        
+    
+        console.log(user)
+    
+        if(user){
+            res
+                .status(201)
+                .json({ success: true, message: 'Room geted succesfully', user });
+        }else{
+            res
+                .status(422)
+                .json({ success: false, message: 'User not find', user:null });
+        }
+        
+    } catch (error) {
+
+        res
+                .status(422)
+                .json({ success: false, message: 'An error occured', user:null, error });
+        
     }
     
   } else {

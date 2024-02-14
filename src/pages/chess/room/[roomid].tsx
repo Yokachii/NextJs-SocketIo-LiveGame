@@ -8,6 +8,7 @@ import Link from "next/link";
 import styles from './styles.module.scss'
 import { useSession } from "next-auth/react";
 import { Button } from "@mantine/core";
+import {MoveInfo, chatItemType,playerSqlType} from '@/types/data'
 let socket:any;
 
 
@@ -33,20 +34,6 @@ export default function PlayRandomMoveEngine() {
 
     const [oponents,setOponents] = useState({name:"?",elo:"1200?"})
     const [playerInfo,setPlayerInfo] = useState({name:user?.name,elo:"1200?"})
-
-    type playerSqlType = {
-      color:string;
-      name:string;
-      elo:string;
-      id:string;
-    }
-
-    type chatItemType = {
-      message:string;
-      name:string;
-      roomid:string;
-      id:string;
-    }
   
     const socketInitializer = async () => {
         await fetch('/api/socket');
@@ -81,13 +68,9 @@ export default function PlayRandomMoveEngine() {
           });
         })
 
-        socketRef.current.on('set-playing-as', async (data:{pgn:string,isFirstTime:boolean,playerType:string,color:string,isOponentsFinded:boolean,isPlaying:boolean,players:Record<string,playerSqlType>,chat:Array<chatItemType>,lastmove:string})=>{
+        socketRef.current.on('set-playing-as', async (data:{pgn:string,isFirstTime:boolean,playerType:string,color:string,isOponentsFinded:boolean,isPlaying:boolean,players:Record<string,PlayerSqlType>,chat:Array<ChatItemType>,lastmove:string})=>{
 
           let {pgn,isFirstTime,playerType,color,isOponentsFinded,isPlaying,players,chat,lastmove} = data
-          // console.log('||||||||||||')
-          // console.log(data)
-          // console.log(playerType)
-          // console.log('||||||||||||')
 
           // Get the chat
           chat.unshift(messageArray[0])
@@ -169,7 +152,7 @@ export default function PlayRandomMoveEngine() {
           setIsPlayingVar(true)
         })
 
-        socketRef.current.on('set-player-spec', async (data:{pgn:string,chat:Array<chatItemType>,players:Record<string,playerSqlType>})=>{
+        socketRef.current.on('set-player-spec', async (data:{pgn:string,chat:Array<ChatItemType>,players:Record<string,PlayerSqlType>})=>{
 
           console.log('screeaaammmmm spec')
 
@@ -302,7 +285,7 @@ export default function PlayRandomMoveEngine() {
       return;
     }
 
-    function moveOnBoardWithoutRequest(move){
+    function moveOnBoardWithoutRequest(move:any){
 
       let tmp = game
       let tmp2
@@ -318,7 +301,7 @@ export default function PlayRandomMoveEngine() {
     
     }
 
-  function makeAMove(move) {
+  function makeAMove(move:MoveInfo) {
     if(!isPlayingVar) return null
     let oldPgn = game.pgn()
 
@@ -349,15 +332,7 @@ export default function PlayRandomMoveEngine() {
     return; // null if the move was illegal, the move object if the move was legal
   }
 
-  function makeRandomMove() {
-    const possibleMoves = game.moves();
-    if (game.isGameOver() || game.isDraw() || possibleMoves.length === 0)
-      return; // exit if the game is over
-    const randomIndex = Math.floor(Math.random() * possibleMoves.length);
-    makeAMove(possibleMoves[randomIndex]);
-  }
-
-  function onDrop(sourceSquare, targetSquare) {
+  function onDrop(sourceSquare:string, targetSquare:string) {
     console.log('droped')
     const move = makeAMove({
       from: sourceSquare,
