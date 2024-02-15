@@ -9,7 +9,8 @@ import styles from './styles.module.scss'
 import { useSession } from "next-auth/react";
 import { Button } from "@mantine/core";
 import {MoveInfo, ChatItemType,PlayerSqlType} from '@/types/data'
-let socket:any;
+import { parse } from "@mliebelt/pgn-parser";
+type Arrow = Array<string>
 
 
 
@@ -22,15 +23,19 @@ export default function PlayRandomMoveEngine() {
     let user = data?.user
     
     const [game, setGame] = useState(new Chess());
+    const [gameInfo,setGameInfo] = useState({baseBoard:`
+    [Variant "From Position"]
+    [FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]`,specMoveInt:0,parsedBoard:game.pgn()?parse(game.pgn(), {startRule: "game"}).moves:[]})
     const [fen,setFen] = useState(game.fen())
     const [socketId,setSocketId] = useState('')
     const socketRef = useRef(null)
     const [isRoomExist,setIsRoomExist] = useState(true)
     const [userColor,setUserColor] = useState('w')
     const [isPlayingVar,setIsPlayingVar] = useState(false)
-    const [messageArray,setMessageArray] = useState([{message:"You joined the chat",name:""}])
+    const [messageArray,setMessageArray] = useState<Array<ChatItemType>>([{message:"You joined the chat",id:"console",name:``,roomid:``}])
     const [input,setInput] = useState('')
-    const [displayBoard,setDisplayBoard] = useState(false)
+    const [isPlayingOnBoard,setIsPlayingOnBoard] = useState(true)
+    const [customArrow,setCustomArrow] = useState<Arrow>([])
 
     const [oponents,setOponents] = useState({name:"?",elo:"1200?"})
     const [playerInfo,setPlayerInfo] = useState({name:user?.name,elo:"1200?"})
@@ -57,7 +62,7 @@ export default function PlayRandomMoveEngine() {
           // makeAMove(data.move.san)
           // moveOnBoardWithoutRequest(data.move)
         })
-        socketRef.current.on('new-message',(data:chatItemType)=>{
+        socketRef.current.on('new-message',(data:ChatItemType)=>{
           if(data.id===socketId) return
           let message = data.message
           let name = data.name
@@ -85,7 +90,6 @@ export default function PlayRandomMoveEngine() {
           
           
           // Display the board
-          setDisplayBoard(true)
           
           if(isPlaying&&isOponentsFinded){
             setIsPlayingVar(true)
@@ -208,7 +212,6 @@ export default function PlayRandomMoveEngine() {
           console.log('loaded '+pgn)
           
           // Display the board
-          setDisplayBoard(true)
 
         })
     }
@@ -281,6 +284,7 @@ export default function PlayRandomMoveEngine() {
         return null;
       }
       setGame(tmp)
+      setGameInfo({specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:parse(pgn, {startRule: "game"}).moves})
       setFen(game.fen())
       return;
     }
@@ -314,6 +318,7 @@ export default function PlayRandomMoveEngine() {
       if(color===userColor){
         setGame(tmp)
         setFen(game.fen())
+        setGameInfo({specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:parse(game.pgn(), {startRule: "game"}).moves})
   
         socketRef.current.emit("move", {pgn:game.pgn(),roomid:roomid,move:tmp2,id:socketId,fen:game.fen()});
   
@@ -321,6 +326,7 @@ export default function PlayRandomMoveEngine() {
 
         // If the player can't play we set the board back to the old pgn to be sure dont get bad visual
         game.loadPgn(oldPgn)
+        setGameInfo({specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:parse(oldPgn, {startRule: "game"}).moves})
 
       }
     } catch (error) {
@@ -334,16 +340,132 @@ export default function PlayRandomMoveEngine() {
 
   function onDrop(sourceSquare:string, targetSquare:string) {
     console.log('droped')
-    const move = makeAMove({
-      from: sourceSquare,
-      to: targetSquare,
-      promotion: "q", // always promote to a queen for example simplicity
-    });
+    if(isPlayingOnBoard){
 
-    // illegal move
-    if (move === null) return false;
-    // setTimeout(makeRandomMove, 200);
-    return true;
+      const move = makeAMove({
+        from: sourceSquare,
+        to: targetSquare,
+        promotion: "q", // always promote to a queen for example simplicity
+      });
+  
+      // illegal move
+      if (move === null) return false;
+      // setTimeout(makeRandomMove, 200);
+      return true;
+
+    }else{
+
+      return false
+
+    }
+  }
+
+  // MOVE VIEW
+
+  function setByInt(int:number,tmpPgn:string){
+
+        // @ts-ignore
+        let moves = parse(tmpPgn, {startRule: "game"}).moves;
+        
+        if(int>moves.length||int<0){
+        }else{
+            loadPgn(gameInfo.baseBoard)
+
+            let tmpArray = []
+
+            for (let i = 0; i < int; i++) {
+                const myMove = moves[i];
+                const notation = myMove.notation
+
+                tmpArray.push(notation.notation)
+                
+                moveOnBoardWithoutRequest(notation.notation)
+            }
+
+        }
+
+    }
+
+    function setArrows(arrows:Array<string>){
+
+        if(arrows&&arrows.length>0){
+            let result = []
+
+            for(let arrow of arrows){
+                let color = arrow.split('')[0].toLowerCase()
+                let from = arrow.slice(1,3)
+                let to = arrow.slice(3,5)
+
+                switch (color) {
+                    case "g":
+                        color=`green`
+                        break;
+                    case "r":
+                        color=`red`
+                        break;
+                    case "b":
+                        color=`blue`
+                        break;
+                
+                    default:
+                        color=`green`
+                        break;
+                }
+
+                result.push([from,to,color])
+            }
+
+            setCustomArrow(result)
+        }else{
+            setCustomArrow([])
+        }
+
+        
+
+    }
+
+    function playAList(array:Array<string>){
+        
+        let tmp2 = array.join(` `)
+
+        // if(tmp2.startsWith(tmp1)&&lastArray.length>0){
+
+        //     let tmpArray = [...lastArray]
+        //     tmpArray.splice(0,array.length)
+
+        //     playAList(lastArray)
+
+            
+        // }else if (tmp1.startsWith(tmp2)&&lastArray.length>0){
+
+        //     // PEUX ÊTRE PLUS TARD (reculer dans les coup)
+
+        //     loadFen(boardPosition.base)
+
+        // }else{
+        //     loadFen(boardPosition.base)
+        // }
+
+        loadPgn(gameInfo.baseBoard)
+        
+
+        setTimeout(() => {
+            
+            for(let item of array){
+
+                moveOnBoardWithoutRequest(item)
+    
+            }
+        }, 100);
+
+    }
+
+  const previewMove = async () => {
+    
+  }
+
+  const nextMove = async () => {
+    
   }
 
   if(isRoomExist){
@@ -352,25 +474,15 @@ export default function PlayRandomMoveEngine() {
       <div className={styles.main}>
 
         <button onClick={()=>{
-          console.log(game.pgn())
+          // console.log(game.pgn())
+          console.log(gameInfo)
         }}>Test</button>
 
         <div>
           isPlayer : {isPlayingVar?"Oui":"Non"}
         </div>
-
-        <div className={styles.players_container}>
-
-          <span>{oponents.name}</span>
-          <span>{oponents.elo}</span>
-
-        </div>
         
         <div className={styles.container_board}>
-          <div style={{width:"40vw"}}>
-              <Chessboard position={fen} onPieceDrop={onDrop} boardOrientation={userColor==="w"?"white":"black"}/>
-          </div>
-
           <div className={styles.chat}>
             <div className={styles.message}>
 
@@ -389,6 +501,7 @@ export default function PlayRandomMoveEngine() {
 
             <Button onClick={()=>{
                 socketRef.current.emit('send-message',{message:input,name:user?user?.name:`Guest`,roomid:roomid,id:socketId})
+                //@ts-ignore
                 setMessageArray(prevSearchItemArray => {
                   const newSearchItemArray = [...prevSearchItemArray, {message:input,name:`You`}];
                   return newSearchItemArray;
@@ -397,14 +510,34 @@ export default function PlayRandomMoveEngine() {
 
             </div>
           </div>
+          
+          <div style={{width:"40vw"}} className={styles.board_container}>
+              <div className={styles.players_container}>
+                <span>{playerInfo.name}</span>
+                <span>{playerInfo.elo}</span>
+              </div>
+              <Chessboard position={fen} onPieceDrop={onDrop} boardOrientation={userColor==="w"?"white":"black"}/>
+              <div className={styles.players_container}>
+                <span>{oponents.name}</span>
+                <span>{oponents.elo}</span>
+              </div>
+          </div>
+
+          <div className={styles.moves}>
+            {/* <Button onClick={()=>{}}>Preview</Button>
+            <Button onClick={()=>{}}>Next</Button> */}
+            {gameInfo.parsedBoard.map((item,i:number)=>{
+              return (
+
+                <div key={i}>{item.notation.notation}</div>
+
+              )
+            })}
+          </div>
+
         </div>
 
-        <div className={styles.players_container}>
-
-          <span>{playerInfo.name}</span>
-          <span>{playerInfo.elo}</span>
-
-        </div>
+        
 
       </div>
     )
