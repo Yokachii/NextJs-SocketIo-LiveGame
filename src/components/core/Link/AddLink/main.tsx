@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 
-const AddLink = (id:string) => {
+type PropsType = {
+    id:string
+}
+
+const AddLink = (props:PropsType) => {
+
+    const {id} = props
 
     const [link,setLink] = useState("")
     const [desc,setDesc] = useState("")
@@ -10,7 +16,7 @@ const AddLink = (id:string) => {
         
         const response = await fetch('/api/user/addLink', {
             method: 'POST',
-            body: JSON.stringify({link,desc,id:id.id}),
+            body: JSON.stringify({link,desc,id:id}),
             headers: {
                 'Content-Type': 'application/json',
             },

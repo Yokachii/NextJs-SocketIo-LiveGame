@@ -6,7 +6,7 @@ import { UserInfo } from '@/types/data'
 type Props = {
 
     friends:Array<UserInfo>
-    userId:string;
+    userId:string|undefined;
     
 }
 
@@ -19,18 +19,26 @@ export default function Friends(props:Props){
         
     },[])
     
-    return(
+    if(!userId){
+        return (
+            <div>
+                cant load
+            </div>
+        )
+    }else{
+        return(
         
-        <div className={styles.main}>
-
-            {friends.map((item,i)=>(
-
-                <User type={"allr"} friend={item} userId={userId} key={i}/>
-
-            ))}
-
-        </div>
-
-    )
+            <div className={styles.main}>
+    
+                {friends.map((item,i)=>(
+    
+                    <User type={"allr"} friend={item} userId={userId} key={i}/>
+    
+                ))}
+    
+            </div>
+    
+        )
+    }
 
 }

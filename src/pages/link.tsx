@@ -68,7 +68,7 @@ const Home = () => {
 
                 {/* <span>Stockage all your data</span> */}
                 
-                <AddLink id={id}></AddLink>
+                <AddLink id={id?id:""}></AddLink>
                 <LinksList links={JSON.parse(user.user.links)}></LinksList>
 
             </div>

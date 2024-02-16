@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import styles from './styles.module.scss'
 import { useRouter } from "next/router";
-import { useSession } from "next-auth/react";
+import { getSession, useSession } from "next-auth/react";
 import Friends from "@/components/core/Friend";
 import AddFriends from "@/components/core/Friend/AddList";
 import { UserInfo } from "@/types/data";
+import { GetServerSidePropsContext } from "next";
 
 export default function MyTest() {
 
@@ -55,7 +56,7 @@ export default function MyTest() {
     
                 <input onChange={(e)=>{searchFriend(e.target.value)}}></input>
     
-                <AddFriends friends={finded} user={user}/>
+                <AddFriends friends={finded} userId={user?.id}/>
     
             </div>
     
@@ -73,4 +74,23 @@ export default function MyTest() {
     
 
     
+}
+
+export async function getServerSideProps(context:GetServerSidePropsContext) {
+    const session = await getSession(context)
+  
+    if (!session) {
+      return {
+        redirect: {
+          destination: '/login',
+          permanent: false,
+        },
+      }
+    }else{
+        
+    }
+  
+    return {
+      props: { session }
+    }
 }

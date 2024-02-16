@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import styles from './styles.module.scss'
 import { useRouter } from "next/router";
-import { useSession } from "next-auth/react";
+import { getSession, useSession } from "next-auth/react";
 import Friends from "@/components/core/Friend";
 import AddFriends from "@/components/core/Friend/AddList";
-import { Session } from "@/types/data";
+import { GetServerSidePropsContext } from "next";
 
 export default function MyTest() {
 
     let session = useSession()
     let data = session.data
-    let user:Session = data?.user
+    let user = data?.user
     let userId = user?.id
 
     const [finded,setFinded] = useState([])
@@ -118,4 +118,23 @@ export default function MyTest() {
     
 
     
+}
+
+export async function getServerSideProps(context:GetServerSidePropsContext) {
+    const session = await getSession(context)
+  
+    if (!session) {
+      return {
+        redirect: {
+          destination: '/login',
+          permanent: false,
+        },
+      }
+    }else{
+        
+    }
+  
+    return {
+      props: { session }
+    }
 }

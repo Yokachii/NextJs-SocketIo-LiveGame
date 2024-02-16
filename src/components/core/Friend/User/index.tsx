@@ -6,7 +6,7 @@ import { Button } from '@mantine/core';
 
 type Props = {
     
-    userId:string;
+    userId:string|undefined;
     friend:UserInfo;
     type:string;
     

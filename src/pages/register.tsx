@@ -54,12 +54,15 @@ const login = (props: PaperProps) => {
     });
 
     const data = await response.json();
+
+    if(data.success){
+      await signIn('credentials', {
+        // redirect: false,
+        email,
+        password,
+      })
+    }
     
-    // await signIn('credentials', {
-    //   redirect: false,
-    //   email,
-    //   password,
-    // })
 
   }
 
