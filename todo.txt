@@ -1,3 +1,4 @@
 Optimisation des state dans les partie
 Permettre au joueur d'ajouter un coup dans l'analyse
 ajouter du style dans la partie room
+Flèche sur room
