@@ -36,7 +36,9 @@ export default function Room() {
     let user = data?.user
     
     const [game, setGame] = useState(new Chess());
-    const [gameInfo,setGameInfo] = useState({baseBoard:``,specMoveInt:0,parsedBoard:[]})
+    const [gameInfo,setGameInfo] = useState({baseBoard:`
+    [Variant "From Position"]
+    [FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]`,specMoveInt:0,parsedBoard:[]})
     const [fen,setFen] = useState(game.fen())
     const [socketId,setSocketId] = useState('')
     const socketRef = useRef(null)
@@ -199,9 +201,6 @@ export default function Room() {
             name1=data1.user.firstname
 
           }
-          
-
-          console.log(name1,name2)
 
           // Set chat
           chat.unshift(messageArray[0])
@@ -367,6 +366,9 @@ export default function Room() {
 
     }else{
 
+      setFen(game.fen())
+      setIsPlayingOnBoard(true)
+
       return false
 
     }
@@ -374,14 +376,53 @@ export default function Room() {
 
   // MOVE VIEW
 
+  const moveOnBoardOnlyVisual = async (move:string,tmpGame:any) => {
+
+    let tmp2
+    try {
+      tmp2 = tmpGame.move(move)
+    } catch (error) {
+      console.log(error)
+      return null;
+    }
+    setFen(tmpGame.fen())
+    return tmp2
+    
+  }
+
+  const loadPgnWithoutModif = async (pgn:string,tmpGame:any) => {
+    try {
+      tmpGame.loadPgn(pgn)
+    } catch (error) {
+      console.log(error)
+      return null;
+    }
+    console.log(tmpGame.pgn())
+    setFen(tmpGame.fen())
+    return;
+  }
+
   async function setByInt(int:number,tmpPgn:string){
 
         // @ts-ignore
         let moves = await parsePgn(tmpPgn)
+        let actualGameMoves = await parsePgn(game.pgn())
+        let actualGameLength = actualGameMoves.length
+
+        console.log(actualGameLength,int)
+        if(actualGameLength<=int){
+          console.log('set true')
+          setIsPlayingOnBoard(true)
+          setFen(game.fen())
+          return
+        }
+
+        const tmpChess = new Chess()
         
         if(int>moves.length||int<0){
         }else{
-            loadPgn(gameInfo.baseBoard)
+            // loadPgn(gameInfo.baseBoard)
+            loadPgnWithoutModif(gameInfo.baseBoard,tmpChess)
 
             let tmpArray = []
 
@@ -391,8 +432,11 @@ export default function Room() {
 
                 tmpArray.push(notation.notation)
                 
-                moveOnBoardWithoutRequest(notation.notation)
+                // moveOnBoardWithoutRequest(notation.notation)
+                moveOnBoardOnlyVisual(notation.notation,tmpChess)
             }
+
+            setGameInfo({specMoveInt:tmpArray.length,baseBoard:gameInfo.baseBoard,parsedBoard:gameInfo.parsedBoard})
 
         }
 
@@ -493,6 +537,9 @@ export default function Room() {
         <div>
           isPlayer : {isPlayingVar?"Oui":"Non"}
         </div>
+        <div>
+          isLive : {isPlayingOnBoard?"Oui":"Non"} {`SpecMoveInt : ${gameInfo.specMoveInt}`}
+        </div>
         
         <div className={styles.container_board}>
           <div className={styles.chat}>
@@ -535,29 +582,49 @@ export default function Room() {
               </div>
           </div>
 
-          <div className={styles.moves}>
-            {/* <Button onClick={()=>{}}>Preview</Button>
-            <Button onClick={()=>{}}>Next</Button> */}
-            {/* {gameInfo.parsedBoard.map((item,i:number)=>{
+          <div className={styles.moves_container}>
+            <div className={styles.moves}>
 
-              const x = gameInfo.parsedBoard.slice(0,i).map(({notation:{notation}})=>notation)
+              {gameInfo.parsedBoard.map((item,i:number)=>{
 
-              return (
+                const x = gameInfo.parsedBoard.slice(0,i).map(({notation:{notation}})=>notation)
 
-                <div key={i}>
-                  <button onClick={()=>{
-                    setByInt(i+1,game.pgn())
-                    // setArrows(item.)
-                  }}>
+                return (
 
-                    {item.notation.notation}
-                    
-                  </button>
-                </div>
+                  <div key={i}>
+                    <button onClick={()=>{
+                      setIsPlayingOnBoard(false)
+                      setByInt(i+1,game.pgn())
+                      // setArrows(item.)
+                    }}>
 
-              )
-            })} */}
-            {JSON.stringify(gameInfo.parsedBoard)}
+                      {item.notation.notation}
+                      
+                    </button>
+                  </div>
+
+                )
+              })}
+
+            </div>
+            <div className={styles.arrow}>
+
+              <Button onClick={()=>{
+                setIsPlayingOnBoard(false)
+                setByInt(isPlayingOnBoard?1:gameInfo.specMoveInt-1,game.pgn())
+              }}>
+                Preview Move
+              </Button>
+              
+              <Button onClick={()=>{
+                setIsPlayingOnBoard(false)
+                setByInt(gameInfo.specMoveInt+1,game.pgn())
+              }}>
+                Next Move
+              </Button>
+
+
+            </div>
           </div>
 
         </div>
