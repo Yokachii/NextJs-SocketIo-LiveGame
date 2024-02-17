@@ -14,12 +14,12 @@ type Arrow = Array<string>
 
 
 
-export default function PlayRandomMoveEngine() {
+export default function Room() {
 
     const parsePgn = async (pgntmp:string) => {
       try {
 
-        return parse(pgntmp, {startRule: "game"}).moves
+        return await parse(pgntmp, {startRule: "game"}).moves
         
       } catch (error) {
 
@@ -36,9 +36,7 @@ export default function PlayRandomMoveEngine() {
     let user = data?.user
     
     const [game, setGame] = useState(new Chess());
-    const [gameInfo,setGameInfo] = useState({baseBoard:`
-    [Variant "From Position"]
-    [FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]`,specMoveInt:0,parsedBoard:game.pgn()?parsePgn(game.pgn()):[]})
+    const [gameInfo,setGameInfo] = useState({baseBoard:``,specMoveInt:0,parsedBoard:[]})
     const [fen,setFen] = useState(game.fen())
     const [socketId,setSocketId] = useState('')
     const socketRef = useRef(null)
@@ -287,7 +285,7 @@ export default function PlayRandomMoveEngine() {
         socketInitializer()
     },[router.isReady,session])
 
-    function loadPgn(pgn:string){
+    async function loadPgn(pgn:string){
 
       let tmp = game
       try {
@@ -296,11 +294,11 @@ export default function PlayRandomMoveEngine() {
         console.log(error)
         return null;
       }
-      console.log(pgn,tmp.pgn())
       setFen(tmp.fen())
       setGame(tmp)
-      setGameInfo({specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:parsePgn(tmp.pgn())})
+      setGameInfo({specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:await parsePgn(tmp.pgn())})
       return;
+      
     }
 
     function moveOnBoardWithoutRequest(move:any){
@@ -319,7 +317,7 @@ export default function PlayRandomMoveEngine() {
     
     }
 
-  function makeAMove(move:MoveInfo) {
+  async function makeAMove(move:MoveInfo) {
     if(!isPlayingVar) return null
     let oldPgn = game.pgn()
 
@@ -332,15 +330,15 @@ export default function PlayRandomMoveEngine() {
       if(color===userColor){
         setGame(tmp)
         setFen(game.fen())
-        setGameInfo({specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:parsePgn(tmp.pgn())})
+        setGameInfo({specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:await parsePgn(tmp.pgn())})
   
-        socketRef.current.emit("move", {pgn:game.pgn(),roomid:roomid,move:tmp2,id:socketId});
+        socketRef.current.emit("move", {fen:fen,pgn:game.pgn(),roomid:roomid,move:tmp2,id:socketId});
   
       }else{
 
         // If the player can't play we set the board back to the old pgn to be sure dont get bad visual
         game.loadPgn(oldPgn)
-        setGameInfo({specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:parsePgn(oldPgn)})
+        setGameInfo({specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:await parsePgn(oldPgn)})
 
       }
     } catch (error) {
@@ -376,10 +374,10 @@ export default function PlayRandomMoveEngine() {
 
   // MOVE VIEW
 
-  function setByInt(int:number,tmpPgn:string){
+  async function setByInt(int:number,tmpPgn:string){
 
         // @ts-ignore
-        let moves = parsePgn(tmpPgn)
+        let moves = await parsePgn(tmpPgn)
         
         if(int>moves.length||int<0){
         }else{

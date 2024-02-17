@@ -124,9 +124,7 @@ const SocketHandler = async (req, res) => {
             status:`w`,
             lastmove:JSON.stringify({after:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",before:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"}),
             chat:JSON.stringify([]),
-            pgn:`
-  [Variant "From Position"]
-  [FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]`,
+            pgn:``,
             userId:userId,
           }).then(x=>{
   
