@@ -10,7 +10,12 @@ import { useSession } from "next-auth/react";
 import { Button } from "@mantine/core";
 import {MoveInfo, ChatItemType,PlayerSqlType} from '@/types/data'
 import { parse } from "@mliebelt/pgn-parser";
-type Arrow = Array<string>
+type Arrows = {
+  from:string;
+  to:string;
+  color:string;
+}
+type CustomArrows = Record<number,Array<Arrows>>
 
 
 
@@ -38,7 +43,7 @@ export default function Room() {
     const [game, setGame] = useState(new Chess());
     const [gameInfo,setGameInfo] = useState({baseBoard:`
     [Variant "From Position"]
-    [FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]`,specMoveInt:0,parsedBoard:[]})
+    [FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]`,specMoveInt:0,parsedBoard:[],gameLenght:0})
     const [fen,setFen] = useState(game.fen())
     const [socketId,setSocketId] = useState('')
     const socketRef = useRef(null)
@@ -48,7 +53,8 @@ export default function Room() {
     const [messageArray,setMessageArray] = useState<Array<ChatItemType>>([{message:"You joined the chat",id:"console",name:``,roomid:``}])
     const [input,setInput] = useState('')
     const [isPlayingOnBoard,setIsPlayingOnBoard] = useState(true)
-    const [customArrow,setCustomArrow] = useState<Arrow>([])
+    const [customArrow,setCustomArrow] = useState<CustomArrows>([])
+    const [actualArrow,setActualArrow] = useState<CustomArrows>([])
 
     const [oponents,setOponents] = useState({name:"?",elo:"1200?"})
     const [playerInfo,setPlayerInfo] = useState({name:user?.name,elo:"1200?"})
@@ -295,7 +301,8 @@ export default function Room() {
       }
       setFen(tmp.fen())
       setGame(tmp)
-      setGameInfo({specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:await parsePgn(tmp.pgn())})
+      const length = await gameLength()
+      setGameInfo({gameLenght:length,specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:await parsePgn(tmp.pgn())})
       return;
       
     }
@@ -329,7 +336,7 @@ export default function Room() {
       if(color===userColor){
         setGame(tmp)
         setFen(game.fen())
-        setGameInfo({specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:await parsePgn(tmp.pgn())})
+        setGameInfo({gameLenght:gameInfo.gameLenght,specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:await parsePgn(tmp.pgn())})
   
         socketRef.current.emit("move", {fen:fen,pgn:game.pgn(),roomid:roomid,move:tmp2,id:socketId});
   
@@ -337,7 +344,7 @@ export default function Room() {
 
         // If the player can't play we set the board back to the old pgn to be sure dont get bad visual
         game.loadPgn(oldPgn)
-        setGameInfo({specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:await parsePgn(oldPgn)})
+        setGameInfo({gameLenght:gameInfo.gameLenght,specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:await parsePgn(oldPgn)})
 
       }
     } catch (error) {
@@ -372,6 +379,28 @@ export default function Room() {
       return false
 
     }
+  }
+
+  const arrowChange = async (squares:Array<string>) => {
+    console.log(customArrow)
+    if(squares.length===0) return;
+    let arrows = []
+    for(let item of squares){
+      let from = item[0]
+      let to = item[1]
+      let color = item[2]
+      arrows.push({from,to,color})
+    }
+    let actualGameLength = await gameLength()
+    let tmp = {...customArrow}
+    if(isPlayingOnBoard){
+      tmp[actualGameLength] = tmp[actualGameLength].concat(arrows)
+      // tmp[actualGameLength] = arrows
+    }else{
+      tmp[gameInfo.specMoveInt] = tmp[gameInfo.specMoveInt].concat(arrows)
+      // tmp[gameInfo.specMoveInt] = arrows
+    }
+    setCustomArrow(tmp)
   }
 
   // MOVE VIEW
@@ -436,21 +465,21 @@ export default function Room() {
                 moveOnBoardOnlyVisual(notation.notation,tmpChess)
             }
 
-            setGameInfo({specMoveInt:tmpArray.length,baseBoard:gameInfo.baseBoard,parsedBoard:gameInfo.parsedBoard})
+            setGameInfo({gameLenght:gameInfo.gameLenght,specMoveInt:tmpArray.length,baseBoard:gameInfo.baseBoard,parsedBoard:gameInfo.parsedBoard})
 
         }
 
     }
 
-    function setArrows(arrows:Array<string>){
+    function setArrows(arrows:Array<Arrows>){
 
         if(arrows&&arrows.length>0){
             let result = []
 
             for(let arrow of arrows){
-                let color = arrow.split('')[0].toLowerCase()
-                let from = arrow.slice(1,3)
-                let to = arrow.slice(3,5)
+                let color = arrow.color
+                let from = arrow.from
+                let to = arrow.to
 
                 switch (color) {
                     case "g":
@@ -524,6 +553,12 @@ export default function Room() {
     
   }
 
+  const gameLength = async () => {
+    let actualGameMoves = await parsePgn(game.pgn())
+    let actualGameLength = actualGameMoves.length
+    return actualGameLength
+  }
+
   if(isRoomExist){
     
     return (
@@ -575,7 +610,7 @@ export default function Room() {
                 <span>{playerInfo.name}</span>
                 <span>{playerInfo.elo}</span>
               </div>
-              <Chessboard position={fen} onPieceDrop={onDrop} boardOrientation={userColor==="w"?"white":"black"}/>
+              <Chessboard customArrows={customArrow[isPlayingOnBoard?gameInfo.gameLenght:gameInfo.specMoveInt]} onArrowsChange={arrowChange} position={fen} onPieceDrop={onDrop} boardOrientation={userColor==="w"?"white":"black"}/>
               <div className={styles.players_container}>
                 <span>{oponents.name}</span>
                 <span>{oponents.elo}</span>
@@ -624,6 +659,10 @@ export default function Room() {
               </Button>
 
 
+            </div>
+            <div>
+              {/* {JSON.stringify(customArrow)} */}
+              {JSON.stringify(customArrow[isPlayingOnBoard?gameInfo.gameLenght:gameInfo.specMoveInt])}
             </div>
           </div>
 
