@@ -7,14 +7,16 @@ import io from 'Socket.IO-client'
 import Link from "next/link";
 import styles from './styles.module.scss'
 import { useSession } from "next-auth/react";
-import { Button } from "@mantine/core";
 import {MoveInfo, ChatItemType,PlayerSqlType} from '@/types/data'
 import { parse } from "@mliebelt/pgn-parser";
-type Arrows = {
-  from:string;
-  to:string;
-  color:string;
-}
+import { Modal, Button } from '@mantine/core';
+import { useDisclosure } from "@mantine/hooks";
+// type Arrows = {
+//   from:string;
+//   to:string;
+//   color:string;
+// }
+type Arrows = Array<string>
 type CustomArrows = Record<number,Array<Arrows>>
 
 
@@ -41,7 +43,7 @@ export default function Room() {
     let user = data?.user
     
     const [game, setGame] = useState(new Chess());
-    const [gameInfo,setGameInfo] = useState({baseBoard:`
+    const [gameInfo,setGameInfo] = useState({termation:`cant load`,isOver:false,baseBoard:`
     [Variant "From Position"]
     [FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]`,specMoveInt:0,parsedBoard:[],gameLenght:0})
     const [fen,setFen] = useState(game.fen())
@@ -53,8 +55,11 @@ export default function Room() {
     const [messageArray,setMessageArray] = useState<Array<ChatItemType>>([{message:"You joined the chat",id:"console",name:``,roomid:``}])
     const [input,setInput] = useState('')
     const [isPlayingOnBoard,setIsPlayingOnBoard] = useState(true)
-    const [customArrow,setCustomArrow] = useState<CustomArrows>([])
-    const [actualArrow,setActualArrow] = useState<CustomArrows>([])
+    const [customArrow,setCustomArrow] = useState<CustomArrows>({})
+    const [modalStr,setModalStr] = useState('loading')
+    // const [actualArrow,setActualArrow] = useState<CustomArrows>({})
+    // const [isEndOpen,setIsEndOpen] = useState(false)
+    const [opened, { open, close }] = useDisclosure(false);
 
     const [oponents,setOponents] = useState({name:"?",elo:"1200?"})
     const [playerInfo,setPlayerInfo] = useState({name:user?.name,elo:"1200?"})
@@ -73,8 +78,7 @@ export default function Room() {
           console.log(data)
           console.log(socketId)
           if(id==socketId) return
-          console.log('i recive a move')
-          console.log(data.move.san)
+          console.log(game.isGameOver())
           loadPgn(data.pgn)
           // moveOnBoardWithoutRequest(data.move.san)
           // setFen(data.move.before)
@@ -159,13 +163,25 @@ export default function Room() {
 
         })
 
-        socketRef.current.on('game-start', (data:{oponentsName:string,oponentsElo:string;})=>{
-          let {oponentsName,oponentsElo} = data
+        socketRef.current.on('game-start', (data:{pgn:string,oponentsName:string,oponentsElo:string;})=>{
+          let {oponentsName,oponentsElo,pgn} = data
+          
+
           console.log(data)
           console.log('game start'+oponentsName+oponentsElo)
+          console.log(`My game start : ${pgn}`)
           
           setIsPlayingVar(true)
           setOponents({name:oponentsName,elo:oponentsElo})
+        })
+
+        socketRef.current.on('game-end', async (data:{pgn:string})=>{
+          const {pgn} = data
+          let parse = await parsePgn(pgn)
+          console.log(parse)
+          setGameInfo({termation:parse.termination,isOver:true,gameLenght:gameInfo.gameLenght,specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:parse})
+          // setIsEndOpen(true)
+          open()
         })
 
         socketRef.current.on(`game-starting-as-p1`, (data:{player2:Record<string,string>})=>{
@@ -175,38 +191,57 @@ export default function Room() {
           setIsPlayingVar(true)
         })
 
-        socketRef.current.on('set-player-spec', async (data:{pgn:string,chat:Array<ChatItemType>,players:Record<string,PlayerSqlType>})=>{
+        socketRef.current.on(`set-spec-ended`, async (data:{pgn:string,chat:Array<ChatItemType>,players:Record<string,PlayerSqlType>})=>{
 
-          console.log('screeaaammmmm spec')
+          console.log('hey')
+
+          let {pgn,chat,players} = data
+
+          let parsePgn = await parse(pgn, {startRule: "game"})
+
+          let player1 = players.player1
+          let player2 = players.player2
+
+          let name1 = player1.name
+          let name2 = player2.name
+
+          // Set chat
+          chat.unshift(messageArray[0])
+          setMessageArray(chat)
+
+          // Set color
+          setUserColor('w')
+
+          if(player1.color==="w"){
+            setPlayerInfo({name:name1?name1:"Can't load name",elo:"1299?. (spec)"})
+            setOponents({name:name2?name2:"Can't load name",elo:"1299?. (spec)"})
+          }else{
+            setPlayerInfo({name:name2?name2:"Can't load name",elo:"1299?. (spec)"})
+            setOponents({name:name1?name1:"Can't load name",elo:"1299?. (spec)"})
+          }
+
+          // Load pgn
+          loadPgn(pgn)
+          // Display end modal
+          console.log(parsePgn.tags.Termination)
+          setModalStr(parsePgn.tags.Termination)
+          setTimeout(() => {
+            open()
+          }, 500);
+          console.log('loaded '+pgn)
+          
+
+        })
+
+        socketRef.current.on('set-player-spec', async (data:{pgn:string,chat:Array<ChatItemType>,players:Record<string,PlayerSqlType>})=>{
 
           let {pgn,chat,players} = data
 
           let player1 = players.player1
           let player2 = players.player2
 
-          let name1
-          let name2
-
-          if(player2.id){
-            const response2 = await fetch('/api/chess/getuser', {method: 'POST',body: JSON.stringify({id:player2.id}),headers: {'Content-Type': 'application/json',},});
-            const data2 = await response2.json();
-            
-            if(data2.success){
-  
-              name2=data2.user.firstname
-  
-            }
-          }
-          
-          const response1 = await fetch('/api/chess/getuser', {method: 'POST',body: JSON.stringify({id:player1.id}),headers: {'Content-Type': 'application/json',},});
-    
-          const data1 = await response1.json();
-    
-          if(data1.success){
-
-            name1=data1.user.firstname
-
-          }
+          let name1 = player1.name
+          let name2 = player2.name
 
           // Set chat
           chat.unshift(messageArray[0])
@@ -226,8 +261,6 @@ export default function Room() {
           // Load pgn
           loadPgn(pgn)
           console.log('loaded '+pgn)
-          
-          // Display the board
 
         })
     }
@@ -266,8 +299,17 @@ export default function Room() {
 
             setIsPlayingVar(false)
 
+          }else if(data.room.status==="end"){
+
+
+            socketRef.current.emit(`join-game-end`,{roomid:roomid,userid:user?.id?user?.id:false})
+
+            setIsPlayingVar(false)
+
+          }else{
+
           }
-          
+           
         }, 400);
 
         
@@ -290,7 +332,7 @@ export default function Room() {
         socketInitializer()
     },[router.isReady,session])
 
-    async function loadPgn(pgn:string){
+    async function loadPgn(pgn:string){ 
 
       let tmp = game
       try {
@@ -302,7 +344,7 @@ export default function Room() {
       setFen(tmp.fen())
       setGame(tmp)
       const length = await gameLength()
-      setGameInfo({gameLenght:length,specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:await parsePgn(tmp.pgn())})
+      setGameInfo({termation:gameInfo.termation,isOver:gameInfo.isOver,gameLenght:length,specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:await parsePgn(tmp.pgn())})
       return;
       
     }
@@ -325,6 +367,7 @@ export default function Room() {
 
   async function makeAMove(move:MoveInfo) {
     if(!isPlayingVar) return null
+    if(gameInfo.isOver) return null
     let oldPgn = game.pgn()
 
     let tmp = game
@@ -336,15 +379,28 @@ export default function Room() {
       if(color===userColor){
         setGame(tmp)
         setFen(game.fen())
-        setGameInfo({gameLenght:gameInfo.gameLenght,specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:await parsePgn(tmp.pgn())})
+        setGameInfo({termation:gameInfo.termation,isOver:gameInfo.isOver,gameLenght:gameInfo.gameLenght,specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:await parsePgn(tmp.pgn())})
+
+        // game.isCheckmate()
+        // game.isStalemate()
+        // game.isDraw()
+        // console.log(game.isGameOver())
+        if(game.isGameOver()){
+
+          socketRef.current.emit("move", {fen:fen,pgn:game.pgn(),roomid:roomid,move:tmp2,id:socketId,isOver:true,winner:userColor});
+
+        }else{
+
+          socketRef.current.emit("move", {fen:fen,pgn:game.pgn(),roomid:roomid,move:tmp2,id:socketId,isOver:false});
+
+        }
   
-        socketRef.current.emit("move", {fen:fen,pgn:game.pgn(),roomid:roomid,move:tmp2,id:socketId});
   
       }else{
 
         // If the player can't play we set the board back to the old pgn to be sure dont get bad visual
         game.loadPgn(oldPgn)
-        setGameInfo({gameLenght:gameInfo.gameLenght,specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:await parsePgn(oldPgn)})
+        setGameInfo({termation:gameInfo.termation,isOver:gameInfo.isOver,gameLenght:gameInfo.gameLenght,specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:await parsePgn(oldPgn)})
 
       }
     } catch (error) {
@@ -381,28 +437,48 @@ export default function Room() {
     }
   }
 
+  const gameOver = async() => {
+    if(game.isGameOver()){
+
+      // setGameInfo({isOver:true,gameLenght:gameInfo.gameLenght,specMoveInt:gameInfo.specMoveInt,baseBoard:gameInfo.baseBoard,parsedBoard:gameInfo.parsedBoard})
+
+    }else{
+
+    }
+  }
+
   const arrowChange = async (squares:Array<string>) => {
     console.log(customArrow)
     if(squares.length===0) return;
     let arrows = []
-    for(let item of squares){
+    let item = squares[squares.length-1]
+    console.log(item)
+    console.log(squares)
+    // for(let item of squares){
       let from = item[0]
       let to = item[1]
-      let color = item[2]
-      arrows.push({from,to,color})
-    }
+      // let color = item[2]
+      let color = "blue"
+      arrows.push([from,to,color])
+    // }
     let actualGameLength = await gameLength()
     let tmp = {...customArrow}
     if(isPlayingOnBoard){
       
+      let actual = tmp[actualGameLength]?tmp[actualGameLength]:[]
+      tmp[actualGameLength] = actual.concat(arrows)
       
-      tmp[actualGameLength] = tmp[actualGameLength].concat(arrows)
+
+      
     }else{
 
+      let actual = tmp[gameInfo.specMoveInt]?tmp[gameInfo.specMoveInt]:[]
+      tmp[gameInfo.specMoveInt] = actual.concat(arrows)
 
-      tmp[gameInfo.specMoveInt] = tmp[gameInfo.specMoveInt].concat(arrows)
+      
     }
     setCustomArrow(tmp)
+    return null
   }
 
   // MOVE VIEW
@@ -439,6 +515,8 @@ export default function Room() {
         let moves = await parsePgn(tmpPgn)
         let actualGameMoves = await parsePgn(game.pgn())
         let actualGameLength = actualGameMoves.length
+        
+        
 
         console.log(actualGameLength,int)
         if(actualGameLength<=int){
@@ -467,49 +545,57 @@ export default function Room() {
                 moveOnBoardOnlyVisual(notation.notation,tmpChess)
             }
 
-            setGameInfo({gameLenght:gameInfo.gameLenght,specMoveInt:tmpArray.length,baseBoard:gameInfo.baseBoard,parsedBoard:gameInfo.parsedBoard})
+            setGameInfo({termation:gameInfo.termation,isOver:gameInfo.isOver,gameLenght:gameInfo.gameLenght,specMoveInt:tmpArray.length,baseBoard:gameInfo.baseBoard,parsedBoard:gameInfo.parsedBoard})
+
+            let tmp = {...customArrow}
+            if(!tmp[int]) tmp[int] = []
+            console.log('|||||||||||||')
+            console.log(tmp)
+            console.log(customArrow)
+            console.log('|||||||||||||')
+            setCustomArrow(tmp)
 
         }
 
     }
 
-    function setArrows(arrows:Array<Arrows>){
+    // function setArrows(arrows:Array<Arrows>){
 
-        if(arrows&&arrows.length>0){
-            let result = []
+    //     if(arrows&&arrows.length>0){
+    //         let result = []
 
-            for(let arrow of arrows){
-                let color = arrow.color
-                let from = arrow.from
-                let to = arrow.to
+    //         for(let arrow of arrows){
+    //             let color = arrow.color
+    //             let from = arrow.from
+    //             let to = arrow.to
 
-                switch (color) {
-                    case "g":
-                        color=`green`
-                        break;
-                    case "r":
-                        color=`red`
-                        break;
-                    case "b":
-                        color=`blue`
-                        break;
+    //             switch (color) {
+    //                 case "g":
+    //                     color=`green`
+    //                     break;
+    //                 case "r":
+    //                     color=`red`
+    //                     break;
+    //                 case "b":
+    //                     color=`blue`
+    //                     break;
                 
-                    default:
-                        color=`green`
-                        break;
-                }
+    //                 default:
+    //                     color=`green`
+    //                     break;
+    //             }
 
-                result.push([from,to,color])
-            }
+    //             result.push([from,to,color])
+    //         }
 
-            setCustomArrow(result)
-        }else{
-            setCustomArrow([])
-        }
+    //         setCustomArrow(result)
+    //     }else{
+    //         setCustomArrow([])
+    //     }
 
         
 
-    }
+    // }
 
     function playAList(array:Array<string>){
         
@@ -561,10 +647,18 @@ export default function Room() {
     return actualGameLength
   }
 
+
   if(isRoomExist){
     
     return (
       <div className={styles.main}>
+
+      <Modal opened={opened} onClose={close} title="Game result" centered>
+        {/* Modal content */}
+        <div>
+          <span>{modalStr}</span>
+        </div>
+      </Modal>
 
         <button onClick={()=>{
           // console.log(game.pgn())
@@ -612,7 +706,7 @@ export default function Room() {
                 <span>{playerInfo.name}</span>
                 <span>{playerInfo.elo}</span>
               </div>
-              <Chessboard customArrows={customArrow[isPlayingOnBoard?gameInfo.gameLenght:gameInfo.specMoveInt]} onArrowsChange={arrowChange} position={fen} onPieceDrop={onDrop} boardOrientation={userColor==="w"?"white":"black"}/>
+              <Chessboard customArrowColor="#FF0000" customArrows={customArrow[isPlayingOnBoard?gameInfo.gameLenght:gameInfo.specMoveInt]} onArrowsChange={arrowChange} position={fen} onPieceDrop={onDrop} boardOrientation={userColor==="w"?"white":"black"}/>
               <div className={styles.players_container}>
                 <span>{oponents.name}</span>
                 <span>{oponents.elo}</span>

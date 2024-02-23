@@ -85,7 +85,7 @@
 // export default SocketHandler
 
 import { Server } from 'Socket.IO'
-
+import { parse } from '@mliebelt/pgn-parser'
 import {Room,User,Study} from '@/module/association'
 
 const SocketHandler = async (req, res) => {
@@ -146,13 +146,46 @@ const SocketHandler = async (req, res) => {
 
 
       socket.on('move', async (data) => {
-        console.log(`New move played :`+data)
         let room = await Room.findOne({where:{token:data.roomid}})
+
+        
         room.lastmove = JSON.stringify(data.move)
         room.board = data.fen
         room.pgn = data.pgn
         room.save();
         socket.to(data.roomid).emit('move-played',data)
+
+
+        let {isOver} = data
+        if(isOver){
+          let players = JSON.parse(room.dataValues.player)
+          let p1 = players.player1
+          let p2 = players.player2
+          let winner = data.winner
+          let result
+          let termination
+          if(winner==="w"){
+            result = `1-0`
+            termination=`${p1.name} wined against ${p2.name}`
+          }else if(winner==="b"){
+            result = `0-1`
+            termination=`${p2.name} wined against ${p1.name}`
+          }else{
+            result = `0-0`
+            termination=`${p1.name} Drawed against ${p2.name}`
+          }
+          let strAdd = `[Result "${result}"]\n[Termination "${termination}"]\n`
+          let newPgn = strAdd+data.pgn
+          room.pgn=newPgn
+          room.status="end"
+          room.save();
+          socket.to(data.roomid).emit('game-end',data)
+          // let parsed = await parse(testNew, {startRule: "game"})
+
+
+        }
+
+
       })
 
 
@@ -228,6 +261,21 @@ const SocketHandler = async (req, res) => {
 
       })
 
+      socket.on('join-game-end', async (data) => {
+
+        console.log('joni alr end')
+
+        let { roomid,userid } = data
+        let room = await Room.findOne({where:{token:roomid}})
+        
+
+        if(room){
+          let players = JSON.parse(room.dataValues.player)
+          socket.emit('set-spec-ended',{pgn:room.dataValues.pgn,chat:JSON.parse(room.dataValues.chat),players:players})
+        }
+
+      })
+
       socket.on('join-game-try', async (data) => {
         let { roomid,userid } = data
         let room = await Room.findOne({where:{token:roomid}})
@@ -296,10 +344,26 @@ const SocketHandler = async (req, res) => {
           player.player2 = {color:player.player1.color=="w"?"b":"w",id:data.userId,name:user2.dataValues.firstname}
           room.player=JSON.stringify(player)
           room.status="p"
+
+          let p1Color = player.player1.color
+          let white = "cant load mhh"
+          let black = "cant load mhh"
+          let whiteElo = "1199"
+          let blackElo = "1199"
+          if(p1Color==="w"){
+            white = user1.dataValues.firstname
+            black = user2.dataValues.firstname
+          }else{
+            white = user2.dataValues.firstname
+            black = user1.dataValues.firstname
+          }
+          let pgn = `[Event "Live Chess"]\n[Site "YokaChess.com"]\n[Date "2024.02.23"]\n[Round "-"]\n[White "${white}"]\n[Black "${black}"]\n[CurrentPosition "${room.board}"]\n[Timezone "UTC"]\n[ECO "B21"]\n[ECOUrl "https://google.com"]\n[UTCDate "2024.02.23"]\n[UTCTime "08:25:35"]\n[WhiteElo "${whiteElo}"]\n[BlackElo "${blackElo}"]\n[TimeControl "900+10"]\n[StartTime "08:25:35"]\n[EndDate "2024.02.23"]\n[EndTime "08:48:21"]\n[Link "http://localhost:3000/chess/room/${room.dataValues.token}"]`
+          room.pgn=pgn
+          
           room.save()
           console.log(`the room : ${room.dataValues.id} got saved as playing`)
           io.to(`${data.roomId}/P1`).emit(`game-starting-as-p1`,{player2:user2.dataValues})
-          socket.emit(`game-start`,{oponentsName:user1.dataValues.firstname,oponentsElo:`1199?`})
+          socket.emit(`game-start`,{pgn,oponentsName:user1.dataValues.firstname,oponentsElo:`1199?`})
 
         }else if(data.playerType="first"){
 
@@ -322,7 +386,7 @@ const SocketHandler = async (req, res) => {
               if(usersInRoom2.length==0){
                 const room = await Room.findOne({where:{token:roomIdLet}})
                 if(room&&room.dataValues){
-
+                  
                   // TODO : arrèter la partie si elle est en cour est donner des résultat
 
                   room.destroy();
