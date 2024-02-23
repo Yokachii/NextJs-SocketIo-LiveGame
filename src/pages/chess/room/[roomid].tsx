@@ -394,11 +394,13 @@ export default function Room() {
     let actualGameLength = await gameLength()
     let tmp = {...customArrow}
     if(isPlayingOnBoard){
+      
+      
       tmp[actualGameLength] = tmp[actualGameLength].concat(arrows)
-      // tmp[actualGameLength] = arrows
     }else{
+
+
       tmp[gameInfo.specMoveInt] = tmp[gameInfo.specMoveInt].concat(arrows)
-      // tmp[gameInfo.specMoveInt] = arrows
     }
     setCustomArrow(tmp)
   }

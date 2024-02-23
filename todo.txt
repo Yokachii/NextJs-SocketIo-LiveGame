@@ -2,3 +2,7 @@ Optimisation des state dans les partie
 Permettre au joueur d'ajouter un coup dans l'analyse
 ajouter du style dans la partie room
 Flèche sur room
+Room fin de game ect
+évaluation après partie room
+évalutation de pgn
+échecier d'analyse (nouveau)
