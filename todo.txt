@@ -6,3 +6,17 @@ Room fin de game ect
 évaluation après partie room
 évalutation de pgn
 échecier d'analyse (nouveau)
+
+TODO :
+> Room
+- Flèche
+- évaluation de partie
+- style
+> Study
+- ajouter des move
+- crée a partir d'un pgn
+> Friend
+- Envoyer des requète de partie
+> Analyse
+- Add stockfish
+- échecier d'analyser
