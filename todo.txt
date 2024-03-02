@@ -20,3 +20,5 @@ TODO :
 > Analyse
 - Add stockfish
 - échecier d'analyser
+
+en game waiting faire un écrant d'attente

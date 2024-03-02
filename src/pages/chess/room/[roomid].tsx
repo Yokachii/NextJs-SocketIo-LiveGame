@@ -57,8 +57,7 @@ export default function Room() {
     const [isPlayingOnBoard,setIsPlayingOnBoard] = useState(true)
     const [customArrow,setCustomArrow] = useState<CustomArrows>({})
     const [modalStr,setModalStr] = useState('loading')
-    // const [actualArrow,setActualArrow] = useState<CustomArrows>({})
-    // const [isEndOpen,setIsEndOpen] = useState(false)
+    const [isGameStarted,setIsGameStarted] = useState(false)
     const [opened, { open, close }] = useDisclosure(false);
 
     const [oponents,setOponents] = useState({name:"?",elo:"1200?"})
@@ -71,7 +70,7 @@ export default function Room() {
             socketRef.current.emit('set-room',roomid)
         })
         socketRef.current.on('room-joined',(data:{id:string,message:string})=>{
-            setSocketId(data.id)
+          setSocketId(data.id)
         })
         socketRef.current.on('move-played', async (data:{pgn:string;id:string;move:Record<string,string>})=>{
           let id = data.id
@@ -96,9 +95,9 @@ export default function Room() {
           });
         })
 
-        socketRef.current.on('set-playing-as', async (data:{pgn:string,isFirstTime:boolean,playerType:string,color:string,isOponentsFinded:boolean,isPlaying:boolean,players:Record<string,PlayerSqlType>,chat:Array<ChatItemType>,lastmove:string})=>{
+        socketRef.current.on('set-playing-as', async (data:{status:string,pgn:string,isFirstTime:boolean,playerType:string,color:string,isOponentsFinded:boolean,isPlaying:boolean,players:Record<string,PlayerSqlType>,chat:Array<ChatItemType>,lastmove:string})=>{
 
-          let {pgn,isFirstTime,playerType,color,isOponentsFinded,isPlaying,players,chat,lastmove} = data
+          let {status,pgn,isFirstTime,playerType,color,isOponentsFinded,isPlaying,players,chat,lastmove} = data
 
           // Get the chat
           chat.unshift(messageArray[0])
@@ -113,7 +112,10 @@ export default function Room() {
           
           
           // Display the board
-          
+          console.log(status)
+          if(status!=="w"){
+            setIsGameStarted(true)
+          }
           if(isPlaying&&isOponentsFinded){
             setIsPlayingVar(true)
           }
@@ -559,65 +561,10 @@ export default function Room() {
 
     }
 
-    // function setArrows(arrows:Array<Arrows>){
-
-    //     if(arrows&&arrows.length>0){
-    //         let result = []
-
-    //         for(let arrow of arrows){
-    //             let color = arrow.color
-    //             let from = arrow.from
-    //             let to = arrow.to
-
-    //             switch (color) {
-    //                 case "g":
-    //                     color=`green`
-    //                     break;
-    //                 case "r":
-    //                     color=`red`
-    //                     break;
-    //                 case "b":
-    //                     color=`blue`
-    //                     break;
-                
-    //                 default:
-    //                     color=`green`
-    //                     break;
-    //             }
-
-    //             result.push([from,to,color])
-    //         }
-
-    //         setCustomArrow(result)
-    //     }else{
-    //         setCustomArrow([])
-    //     }
-
-        
-
-    // }
-
     function playAList(array:Array<string>){
         
         let tmp2 = array.join(` `)
 
-        // if(tmp2.startsWith(tmp1)&&lastArray.length>0){
-
-        //     let tmpArray = [...lastArray]
-        //     tmpArray.splice(0,array.length)
-
-        //     playAList(lastArray)
-
-            
-        // }else if (tmp1.startsWith(tmp2)&&lastArray.length>0){
-
-        //     // PEUX ÊTRE PLUS TARD (reculer dans les coup)
-
-        //     loadFen(boardPosition.base)
-
-        // }else{
-        //     loadFen(boardPosition.base)
-        // }
 
         loadPgn(gameInfo.baseBoard)
         
@@ -650,124 +597,135 @@ export default function Room() {
 
   if(isRoomExist){
     
-    return (
-      <div className={styles.main}>
-
-      <Modal opened={opened} onClose={close} title="Game result" centered>
-        {/* Modal content */}
-        <div>
-          <span>{modalStr}</span>
-        </div>
-      </Modal>
-
-        <button onClick={()=>{
-          // console.log(game.pgn())
-          console.log(gameInfo)
-        }}>Test</button>
-
-        <div>
-          isPlayer : {isPlayingVar?"Oui":"Non"}
-        </div>
-        <div>
-          isLive : {isPlayingOnBoard?"Oui":"Non"} {`SpecMoveInt : ${gameInfo.specMoveInt}`}
-        </div>
-        
-        <div className={styles.container_board}>
-          <div className={styles.chat}>
-            <div className={styles.message}>
-
-              {
-                messageArray.map((item,i)=>(
-                  <span key={i}>
-                    <span>{item.name}</span> <span>{item.message}</span>
-                  </span>
-                ))
-              }
-
-            </div>
-            <div className={styles.send}>
-
-            <input onChange={(e)=>{setInput(e.target.value)}}></input>
-
-            <Button onClick={()=>{
-                socketRef.current.emit('send-message',{message:input,name:user?user?.name:`Guest`,roomid:roomid,id:socketId})
-                //@ts-ignore
-                setMessageArray(prevSearchItemArray => {
-                  const newSearchItemArray = [...prevSearchItemArray, {message:input,name:`You`}];
-                  return newSearchItemArray;
-                });
-            }}>Send a message</Button>
-
-            </div>
+    if(isGameStarted){
+      return (
+        <div className={styles.main}>
+  
+        <Modal opened={opened} onClose={close} title="Game result" centered>
+          {/* Modal content */}
+          <div>
+            <span>{modalStr}</span>
+          </div>
+        </Modal>
+  
+          <button onClick={()=>{
+            // console.log(game.pgn())
+            console.log(gameInfo)
+          }}>Test</button>
+  
+          <div>
+            isPlayer : {isPlayingVar?"Oui":"Non"}
+          </div>
+          <div>
+            isLive : {isPlayingOnBoard?"Oui":"Non"} {`SpecMoveInt : ${gameInfo.specMoveInt}`}
           </div>
           
-          <div style={{width:"40vw"}} className={styles.board_container}>
-              <div className={styles.players_container}>
-                <span>{playerInfo.name}</span>
-                <span>{playerInfo.elo}</span>
+          <div className={styles.container_board}>
+            <div className={styles.chat}>
+              <div className={styles.message}>
+  
+                {
+                  messageArray.map((item,i)=>(
+                    <span key={i}>
+                      <span>{item.name}</span> <span>{item.message}</span>
+                    </span>
+                  ))
+                }
+  
               </div>
-              <Chessboard customArrowColor="#FF0000" customArrows={customArrow[isPlayingOnBoard?gameInfo.gameLenght:gameInfo.specMoveInt]} onArrowsChange={arrowChange} position={fen} onPieceDrop={onDrop} boardOrientation={userColor==="w"?"white":"black"}/>
-              <div className={styles.players_container}>
-                <span>{oponents.name}</span>
-                <span>{oponents.elo}</span>
+              <div className={styles.send}>
+  
+              <input onChange={(e)=>{setInput(e.target.value)}}></input>
+  
+              <Button onClick={()=>{
+                  socketRef.current.emit('send-message',{message:input,name:user?user?.name:`Guest`,roomid:roomid,id:socketId})
+                  //@ts-ignore
+                  setMessageArray(prevSearchItemArray => {
+                    const newSearchItemArray = [...prevSearchItemArray, {message:input,name:`You`}];
+                    return newSearchItemArray;
+                  });
+              }}>Send a message</Button>
+  
               </div>
+            </div>
+            
+            <div style={{width:"40vw"}} className={styles.board_container}>
+                <div className={styles.players_container}>
+                  <span>{playerInfo.name}</span>
+                  <span>{playerInfo.elo}</span>
+                </div>
+                <Chessboard customArrowColor="#FF0000" customArrows={customArrow[isPlayingOnBoard?gameInfo.gameLenght:gameInfo.specMoveInt]} onArrowsChange={arrowChange} position={fen} onPieceDrop={onDrop} boardOrientation={userColor==="w"?"white":"black"}/>
+                <div className={styles.players_container}>
+                  <span>{oponents.name}</span>
+                  <span>{oponents.elo}</span>
+                </div>
+            </div>
+  
+            <div className={styles.moves_container}>
+              <div className={styles.moves}>
+  
+                {gameInfo.parsedBoard.map((item,i:number)=>{
+  
+                  const x = gameInfo.parsedBoard.slice(0,i).map(({notation:{notation}})=>notation)
+  
+                  return (
+  
+                    <div key={i}>
+                      <button onClick={()=>{
+                        setIsPlayingOnBoard(false)
+                        setByInt(i+1,game.pgn())
+                        // setArrows(item.)
+                      }}>
+  
+                        {item.notation.notation}
+                        
+                      </button>
+                    </div>
+  
+                  )
+                })}
+  
+              </div>
+              <div className={styles.arrow}>
+  
+                <Button onClick={()=>{
+                  setIsPlayingOnBoard(false)
+                  setByInt(isPlayingOnBoard?1:gameInfo.specMoveInt-1,game.pgn())
+                }}>
+                  Preview Move
+                </Button>
+                
+                <Button onClick={()=>{
+                  setIsPlayingOnBoard(false)
+                  setByInt(gameInfo.specMoveInt+1,game.pgn())
+                }}>
+                  Next Move
+                </Button>
+  
+  
+              </div>
+              <div>
+                {/* {JSON.stringify(customArrow)} */}
+                {JSON.stringify(customArrow[isPlayingOnBoard?gameInfo.gameLenght:gameInfo.specMoveInt])}
+              </div>
+            </div>
+  
           </div>
-
-          <div className={styles.moves_container}>
-            <div className={styles.moves}>
-
-              {gameInfo.parsedBoard.map((item,i:number)=>{
-
-                const x = gameInfo.parsedBoard.slice(0,i).map(({notation:{notation}})=>notation)
-
-                return (
-
-                  <div key={i}>
-                    <button onClick={()=>{
-                      setIsPlayingOnBoard(false)
-                      setByInt(i+1,game.pgn())
-                      // setArrows(item.)
-                    }}>
-
-                      {item.notation.notation}
-                      
-                    </button>
-                  </div>
-
-                )
-              })}
-
-            </div>
-            <div className={styles.arrow}>
-
-              <Button onClick={()=>{
-                setIsPlayingOnBoard(false)
-                setByInt(isPlayingOnBoard?1:gameInfo.specMoveInt-1,game.pgn())
-              }}>
-                Preview Move
-              </Button>
-              
-              <Button onClick={()=>{
-                setIsPlayingOnBoard(false)
-                setByInt(gameInfo.specMoveInt+1,game.pgn())
-              }}>
-                Next Move
-              </Button>
-
-
-            </div>
-            <div>
-              {/* {JSON.stringify(customArrow)} */}
-              {JSON.stringify(customArrow[isPlayingOnBoard?gameInfo.gameLenght:gameInfo.specMoveInt])}
-            </div>
-          </div>
-
+  
+          
+  
         </div>
-
-        
-
-      </div>
-    )
+      )
+    }else{
+      return (
+        <div>
+          <span>name : {playerInfo.name}</span>
+          <span>socket : {socketId}</span>
+          <span>game : {isGameStarted?`true`:`false`}</span>
+          <span></span>
+        </div>
+      )
+    }
 
   }else{
 

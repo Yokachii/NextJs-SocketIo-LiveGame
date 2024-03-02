@@ -228,7 +228,7 @@ const SocketHandler = async (req, res) => {
   
               if(userid===player1.id){
   
-                socket.emit('set-playing-as',{pgn:room.dataValues.pgn,isFirstTime:false,playerType:"first",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color,isPlaying:true,isOponentsFinded:true,players:players})
+                socket.emit('set-playing-as',{status:room.dataValues.status,pgn:room.dataValues.pgn,isFirstTime:false,playerType:"first",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color,isPlaying:true,isOponentsFinded:true,players:players})
                 
                 console.log('set as first by id')
   
@@ -236,7 +236,7 @@ const SocketHandler = async (req, res) => {
 
                 console.log('set as last by id')
   
-                socket.emit('set-playing-as',{pgn:room.dataValues.pgn,isFirstTime:false,playerType:"last",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player2.color,isPlaying:true,isOponentsFinded:true,players:players})
+                socket.emit('set-playing-as',{status:room.dataValues.status,pgn:room.dataValues.pgn,isFirstTime:false,playerType:"last",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player2.color,isPlaying:true,isOponentsFinded:true,players:players})
   
               }else{
 
@@ -295,12 +295,12 @@ const SocketHandler = async (req, res) => {
             if(player1.id===user.dataValues.id){
               console.log('myself')
               socket.join(`${roomid}/P1`)
-              socket.emit('set-playing-as',{pgn:room.dataValues.pgn,isFirstTime:true,playerType:"first",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color,isPlaying:true,isOponentsFinded:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{name:"Waiting",elo:"1299? (en attente)"}}})
+              socket.emit('set-playing-as',{status:room.dataValues.status,pgn:room.dataValues.pgn,isFirstTime:true,playerType:"first",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color,isPlaying:true,isOponentsFinded:false,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{name:"Waiting",elo:"1299? (en attente)"}}})
               
             }else{
               console.log('p2')
               
-              socket.emit('set-playing-as',{pgn:room.dataValues.pgn,isFirstTime:true,playerType:"last",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color==="w"?"b":"w",isPlaying:true,isOponentsFinded:true,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{name:user.dataValues.firstname,id:user.dataValues.id}}})
+              socket.emit('set-playing-as',{status:room.dataValues.status,pgn:room.dataValues.pgn,isFirstTime:true,playerType:"last",lastmove:room.dataValues.lastmove,chat:JSON.parse(room.dataValues.chat),color:player1.color==="w"?"b":"w",isPlaying:true,isOponentsFinded:true,players:{player1:{name:player1user.dataValues.firstname,id:player1.id},player2:{name:user.dataValues.firstname,id:user.dataValues.id}}})
   
             }
   
