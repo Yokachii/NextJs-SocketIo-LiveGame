@@ -29,7 +29,7 @@ const Friendship = sequelize.define('friendships', {
     timestamps: false,
     tableName: 'friendships',
     name: 'friendships',
-    modelNamel: 'friendships'
+    modelName: 'friendships'
 });
 
 (async () => {

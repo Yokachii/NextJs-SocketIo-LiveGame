@@ -68,7 +68,7 @@ const User = sequelize.define('users', {
     timestamps: false,
     tableName: 'users',
     name: 'users',
-    modelNamel: 'users'
+    modelName: 'users'
 });
 
 (async () => {

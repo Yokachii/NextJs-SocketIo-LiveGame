@@ -13,7 +13,7 @@ const User_Study = sequelize.define('User_Study', {
     timestamps: false,
     tableName: 'User_study',
     name: 'User_study',
-    modelNamel: 'User_study'
+    modelName: 'User_study'
 });
 
 

@@ -37,7 +37,7 @@ const Study = sequelize.define('studys', {
     timestamps: false,
     tableName: 'studys',
     name: 'studys',
-    modelNamel: 'studys'
+    modelName: 'studys'
 });
 
 (async () => {

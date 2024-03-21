@@ -9,7 +9,7 @@ const User = sequelize.define('token', {
     timestamps: false,
     tableName: 'token',
     name: 'token',
-    modelNamel: 'token'
+    modelName: 'token'
 });
 
 (async () => {

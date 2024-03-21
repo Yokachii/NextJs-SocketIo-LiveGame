@@ -49,7 +49,7 @@ const Room = sequelize.define('rooms', {
     timestamps: false,
     tableName: 'rooms',
     name: 'rooms',
-    modelNamel: 'rooms'
+    modelName: 'rooms'
 });
 
 (async () => {
