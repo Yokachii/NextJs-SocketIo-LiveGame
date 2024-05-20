@@ -96,7 +96,8 @@ export const authOptions = {
       if(uerss){
 
         session.user.id=uerss.dataValues.id
-        session.user.links=uerss.dataValues.links
+        session.user.test = "SALUT"
+        session.test2 = "TEST2"
 
       }else{
         session.user.id=""
