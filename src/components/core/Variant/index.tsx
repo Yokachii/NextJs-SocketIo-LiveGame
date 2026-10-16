@@ -57,7 +57,7 @@ export default function Variant(props:Props){
                             const tmp2 = shad.splice(0,i).map(({notation:{notation}})=>notation)
 
                             return (
-                                <div className={`${styles.variation} ${styles.aMoveRaw}`}>
+                                <div className={`${styles.variation} ${styles.aMoveRaw}`} key={i}>
                                     <Variant arrows={variantMove.commentDiag?.colorArrows} setArrows={setArrows} comment={variantMove?.commentAfter?variantMove?.commentAfter:''}  moveint={moveint+1} playeMoveList={playeMoveList} setByInt={setByInt} pgn={pgn} move={variantMove.notation.notation} parent={parent.concat(tmp2)} int={int+1} variants={variantMove.variations}></Variant>
                                     {/* <Variant moveint={moveint+1} pgn={pgn} playAList={playAList} setByInt={setByInt} move={variantMove.notation.notation} parent={[...parent,move]} int={int+1} variants={variantMove.variations}></Variant> */}
                                 </div>

@@ -159,7 +159,7 @@ export default function MyTest() {
                         const x = parseStudy.slice(0,i).map(({notation:{notation}})=>notation)
                         const x2 = [...x]
                         return (
-                            <div>
+                            <div key={i}>
                                 <Variant comment={item?.commentAfter?item.commentAfter:""} setByInt={setByInt} playeMoveList={playAList} moveint={i} pgn={pgn} int={0} move={item.notation.notation} parent={x2} variants={item.variations}></Variant>
                             </div>
                         )
