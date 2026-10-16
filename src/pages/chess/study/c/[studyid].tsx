@@ -311,7 +311,7 @@ export default function study() {
                         console.log('|||||||||||||||')
 
                         return (
-                            <div>
+                            <div key={i}>
                                 <Variant moveint={i} pgn={studyPgn} setByInt={setByInt} playAList={playAList} int={0} move={item.notation.notation} parent={x} variants={item.variations}></Variant>
                             </div>
                         )
