@@ -16,7 +16,7 @@ import { useSearchParams } from 'next/navigation'
 import { useSession, signIn, signOut } from "next-auth/react"
 
 
-const login = (props: PaperProps) => {
+const Login = (props: PaperProps) => {
   
   let search = `a`
 
@@ -138,4 +138,4 @@ const login = (props: PaperProps) => {
   );
 };
 
-export default login;
+export default Login;
