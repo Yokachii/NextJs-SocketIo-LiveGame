@@ -14,7 +14,7 @@ let socket:any;
 
 
 
-export default function study() {
+export default function Study() {
     const router = useRouter()
     const { studyid } = router.query
 
