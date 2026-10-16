@@ -12,53 +12,47 @@ import {
   Stack,
 } from "@mantine/core";
 import GoogleButton from "@/components/core/Login/googleButton";
-import { useSession, signIn, signOut } from "next-auth/react"
+import { useSession, signIn } from "next-auth/react";
 
-const login = (props: PaperProps) => {
-  
-  const { data: session } = useSession()
-  console.log(session)
+const Login = (props: PaperProps) => {
+  const { data: session } = useSession();
+  console.log(session);
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const form = useForm({
     initialValues: {
       email: "",
-      // name: "",
       password: "",
       terms: true,
     },
 
     validate: {
       email: (val: string) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
-      password: (val: string) => (val.length <= 6 ? "Password should include at least 6 characters" : null),
+      password: (val: string) =>
+        val.length <= 6 ? "Password should include at least 6 characters" : null,
     },
   });
 
-  const handleLogin = async (email:string,password:string) => {
-    
-    await signIn('credentials', {
+  const handleLogin = async (email: string, password: string) => {
+    await signIn("credentials", {
       redirect: false,
       email,
       password,
-    })
-    console.log('loged with' + email + password)
-
-  }
+    });
+    console.log("logged with " + email + password);
+  };
 
   return (
-    <>
-      <div
-        style={{
-          maxWidth: "calc(26.25rem * var(--mantine-scale))",
-          marginLeft: "auto",
-          marginRight: "auto",
-        }}
-      >
-
-        {session?.user?(
-          <p>non</p>
-        ):(
-          <Paper radius="md" p="xl" withBorder {...props}>
+    <div
+      style={{
+        maxWidth: "calc(26.25rem * var(--mantine-scale))",
+        marginLeft: "auto",
+        marginRight: "auto",
+      }}
+    >
+      {session?.user ? (
+        <p>non</p>
+      ) : (
+        <Paper radius="md" p="xl" withBorder {...props}>
           <Text size="lg" fw={500}>
             Welcome to Oxie, Login with
           </Text>
@@ -67,16 +61,26 @@ const login = (props: PaperProps) => {
             <GoogleButton radius="xl">Google</GoogleButton>
           </Group>
 
-          <Divider label="Or continue with email (only Oxie SSO users)" labelPosition="center" my="lg" />
+          <Divider
+            label="Or continue with email (only Oxie SSO users)"
+            labelPosition="center"
+            my="lg"
+          />
 
-          <form onSubmit={form.onSubmit((e) => {handleLogin(e.email,e.password)})}>
+          <form
+            onSubmit={form.onSubmit((e) => {
+              handleLogin(e.email, e.password);
+            })}
+          >
             <Stack>
               <TextInput
                 required
                 label="Email"
                 placeholder="john.doe@oxie.fr"
                 value={form.values.email}
-                onChange={(event) => form.setFieldValue("email", event.currentTarget.value)}
+                onChange={(event) =>
+                  form.setFieldValue("email", event.currentTarget.value)
+                }
                 error={form.errors.email && "Invalid email"}
                 radius="md"
               />
@@ -86,8 +90,13 @@ const login = (props: PaperProps) => {
                 label="Password"
                 placeholder="Your password"
                 value={form.values.password}
-                onChange={(event) => form.setFieldValue("password", event.currentTarget.value)}
-                error={form.errors.password && "Password should include at least 6 characters"}
+                onChange={(event) =>
+                  form.setFieldValue("password", event.currentTarget.value)
+                }
+                error={
+                  form.errors.password &&
+                  "Password should include at least 6 characters"
+                }
                 radius="md"
               />
             </Stack>
@@ -99,11 +108,9 @@ const login = (props: PaperProps) => {
             </Group>
           </form>
         </Paper>
-        )}
-        
-      </div>
-    </>
+      )}
+    </div>
   );
 };
 
-export default login;
+export default Login;
