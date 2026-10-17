@@ -43,13 +43,13 @@ const mockdata: NavbarItem[] = [
   {
     icon: IconCode,
     title: "Open source",
-    description: "Oxie's code is open source and available to everyone.",
-    link: "https://github.com/Oxie-Inc",
+    description: "ChessGame's code is open source and available to everyone.",
+    link: "https://github.com/ChessGame-Inc",
   },
   {
     icon: IconCoin,
     title: "Freenium",
-    description: "You can start using Oxie right away and ugprade later.",
+    description: "You can start using ChessGame right away and ugprade later.",
     link: "#test",
   },
 ];

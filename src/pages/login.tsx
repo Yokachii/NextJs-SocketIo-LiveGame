@@ -54,7 +54,7 @@ const Login = (props: PaperProps) => {
       ) : (
         <Paper radius="md" p="xl" withBorder {...props}>
           <Text size="lg" fw={500}>
-            Welcome to Oxie, Login with
+            Welcome to ChessGame, Login with
           </Text>
 
           <Group grow my="md">
@@ -62,7 +62,7 @@ const Login = (props: PaperProps) => {
           </Group>
 
           <Divider
-            label="Or continue with email (only Oxie SSO users)"
+            label="Or continue with email (only ChessGame SSO users)"
             labelPosition="center"
             my="lg"
           />
@@ -76,7 +76,7 @@ const Login = (props: PaperProps) => {
               <TextInput
                 required
                 label="Email"
-                placeholder="john.doe@oxie.fr"
+                placeholder="john.doe@chessgame.fr"
                 value={form.values.email}
                 onChange={(event) =>
                   form.setFieldValue("email", event.currentTarget.value)

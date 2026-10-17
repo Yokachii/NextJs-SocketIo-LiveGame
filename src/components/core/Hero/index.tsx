@@ -10,11 +10,11 @@ export function Hero() {
       <div className={styles.inner}>
         <div className={styles.content}>
           <Title className={styles.title}>
-            Use <span className={styles.highlight}>Oxie</span> or easily setup <br /> your own bot
+            Use <span className={styles.highlight}>ChessGame</span> or easily setup <br /> your own bot
           </Title>
           <Text c="dimmed" mt="md" fz="17px">
-            Oxie is a versatile bot that can work wonders on your server - You have security problems or you
-            want a bot to help you with a difficult task on your server then invite Oxie, he will help you.
+            ChessGame is a versatile bot that can work wonders on your server - You have security problems or you
+            want a bot to help you with a difficult task on your server then invite ChessGame, he will help you.
           </Text>
 
           <List
@@ -28,7 +28,7 @@ export function Hero() {
             }
           >
             <List.Item>
-              <b>Free</b> – Use the free version of Oxie, which lets you use lots of commands and much more.
+              <b>Free</b> – Use the free version of ChessGame, which lets you use lots of commands and much more.
             </List.Item>
             <List.Item
               icon={

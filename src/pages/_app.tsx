@@ -13,7 +13,7 @@ const App = ({ Component, pageProps: { session, ...pageProps }, }: any) => {
     <SessionProvider session={session}>
       <MantineProvider theme={theme}>
         <Head>
-          <title>Oxie</title>
+          <title>ChessGame</title>
           <meta
             name="viewport"
             content="minimum-scale=1, initial-scale=1, width=device-width, user-scalable=no"

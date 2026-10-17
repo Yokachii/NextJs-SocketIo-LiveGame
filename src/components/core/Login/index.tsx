@@ -37,21 +37,21 @@ export function Login(props: PaperProps) {
             }}>
                 <Paper radius="md" p="xl" withBorder {...props}>
                     <Text size="lg" fw={500}>
-                        Welcome to Oxie, Login with
+                        Welcome to ChessGame, Login with
                     </Text>
 
                     <Group grow mb="md" mt="md">
                         <DiscordButton radius="xl">Discord</DiscordButton>
                     </Group>
 
-                    <Divider label="Or continue with email (only oxie sso users)" labelPosition="center" my="lg" />
+                    <Divider label="Or continue with email (only chessgame sso users)" labelPosition="center" my="lg" />
 
                     <form onSubmit={form.onSubmit(() => { })}>
                         <Stack>
                             <TextInput
                                 required
                                 label="Email"
-                                placeholder="john.doe@oxie.fr"
+                                placeholder="john.doe@chessgame.fr"
                                 value={form.values.email}
                                 onChange={(event) => form.setFieldValue('email', event.currentTarget.value)}
                                 error={form.errors.email && 'Invalid email'}

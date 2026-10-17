@@ -81,14 +81,14 @@ const Login = (props: PaperProps) => {
         ):(
           <Paper radius="md" p="xl" withBorder {...props}>
           <Text size="lg" fw={500}>
-            Welcome to Oxie, Register with
+            Welcome to chessgame, Register with
           </Text>
 
           {/* <Group grow my="md">
             <DiscordButton radius="xl">Discord</DiscordButton>
           </Group> */}
 
-          <Divider label="Or continue with email (only Oxie SSO users)" labelPosition="center" my="lg" />
+          <Divider label="Or continue with email (only chessgame SSO users)" labelPosition="center" my="lg" />
 
           <form onSubmit={form.onSubmit((e) => {handleLogin(e.email,e.password,e.name)})}>
             <Stack>
@@ -106,7 +106,7 @@ const Login = (props: PaperProps) => {
               <TextInput
                 required
                 label="Email"
-                placeholder="john.doe@oxie.fr"
+                placeholder="john.doe@chessgame.fr"
                 value={form.values.email}
                 onChange={(event) => form.setFieldValue("email", event.currentTarget.value)}
                 error={form.errors.email && "Invalid email"}
