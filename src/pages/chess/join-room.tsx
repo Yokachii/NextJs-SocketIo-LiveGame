@@ -79,7 +79,7 @@ export default function PlayRandomMoveEngine() {
                 rooms.map((item,i)=>(
                     <div key={i}>
                         <Link href={`/chess/room/${item.token}`}>
-                            <span>Room's name : {item.id}</span>
+                            <span>Room s name : {item.id}</span>
                             <br></br>
                             <span>{item.status==="w"?`${JSON.parse(item.player).player1.name} Attend un adversaire`:`${JSON.parse(item.player).player1.name} Joue contre : ${JSON.parse(item.player).player2.name}`}</span>
                         </Link>

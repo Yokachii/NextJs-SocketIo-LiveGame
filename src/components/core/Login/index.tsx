@@ -11,7 +11,7 @@ import {
     Divider,
     Stack
 } from '@mantine/core';
-import { DiscordButton } from './googleButton';
+import DiscordButton from '@/components/DiscordButton';
 
 export function Login(props: PaperProps) {
     const form = useForm({

@@ -48,7 +48,7 @@ const LinksList = (links:any) => {
         <div>
             
             {/* {da} */}
-            {JSON.parse(arrayLink).map((item,i) => (
+            {JSON.parse(arrayLink).map((item:any,i:number) => (
                 <div key={i}>
                     
                     {/* <CopyButton value={item.link}>

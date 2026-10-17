@@ -51,7 +51,7 @@ export default function Variant(props:Props){
             <div className={styles.var_container}>
                 {variants.map((moves)=>(
                     <>
-                        {moves.map((variantMove,i)=>{
+                        {moves.map((variantMove:any,i:number)=>{
 
                             const shad = [...moves]
                             const tmp2 = shad.splice(0,i).map(({notation:{notation}})=>notation)

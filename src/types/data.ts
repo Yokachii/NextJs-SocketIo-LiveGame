@@ -82,4 +82,19 @@ type Session = {
   image?:string|null|undefined;
 }
 
+type Feature = {
+  title:string;
+  description:string;
+  icon:any;
+}
+
+type NavbarItem = {
+  title:string;
+  description:string;
+  icon:any;
+  link?:string;
+}
+
+export type {Feature, NavbarItem}
+
 export type { Session,UserTypeWithRoom,UserInfo,PlayerSqlType,ChatItemType,MoveInfo };
