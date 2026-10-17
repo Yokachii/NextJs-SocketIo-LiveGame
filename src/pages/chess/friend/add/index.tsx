@@ -15,8 +15,6 @@ export default function MyTest() {
 
     const [finded,setFinded] = useState([])
 
-    // Hooks + Socket
-
     const searchFriend = async (name:string) => {
         // console.log(studyid)
         const response = await fetch('/api/chess/searchuser', {
